@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#3b82f6"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="NUTRYX"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="NUTRYX – Your AI-powered health & nutrition tracker"/>
+
+<!-- PWA Manifest inline -->
+<script>
+const manifestData = {
+  name: "NUTRYX – AI Health Tracker",
+  short_name: "NUTRYX",
+  description: "AI-powered nutrition, workout, water & weight tracker",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#080d14",
+  theme_color: "#3b82f6",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.addEventListener('DOMContentLoaded', () => {
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = manifestURL;
+  document.head.appendChild(link);
+});
+</script>
+
+<!-- Apple touch icon via SVG data URI -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
+<title>NUTRYX</title>
+
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body,#root{height:100%;width:100%;overflow:hidden;}
+  body{background:#080d14;color:#e8f0fe;font-family:'DM Sans','Segoe UI',system-ui,sans-serif;overscroll-behavior:none;}
+  #root{height:100vh;height:100dvh;overflow:hidden;}
+  #app-shell{height:100%;display:flex;flex-direction:column;}
+  #scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;padding-bottom:env(safe-area-inset-bottom);}
+  #bottom-nav{flex-shrink:0;padding-bottom:calc(env(safe-area-inset-bottom) + 4px);}
+  /* Install banner */
+  #install-banner{display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:16px;padding:14px 16px;z-index:999;gap:12px;align-items:center;}
+  #install-banner.show{display:flex;}
+  /* Splash screen */
+  #splash{position:fixed;inset:0;background:#080d14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s;}
+  #splash.hidden{opacity:0;pointer-events:none;}
+  input,button{font-family:inherit;}
+  input::placeholder{color:#5d82b4;}
+  ::-webkit-scrollbar{display:none;}
+  button:active{transform:scale(0.96);transition:transform 0.1s;}
+  @media(hover:hover){button:hover{opacity:0.85;}}
+</style>
+
+<!-- React + Babel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- Splash Screen -->
+<div id="splash">
+  <svg width="90" height="90" viewBox="0 0 90 90">
+    <rect width="90" height="90" rx="20" fill="#0d1520"/>
+    <text x="45" y="66" text-anchor="middle" font-size="58" font-family="system-ui,sans-serif" font-weight="900" fill="#3b82f6">N</text>
+  </svg>
+  <div style="font-size:28px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px;margin-top:16px;">NUTRYX</div>
+  <div data-i18n="tagline" style="font-size:13px;color:#5d82b4;margin-top:6px;">Your AI Health Coach</div>
+  <div style="margin-top:40px;display:flex;gap:8px;">
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0s infinite;"></div>
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0.2s infinite;"></div>
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0.4s infinite;"></div>
+  </div>
+</div>
+<style>
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes scanLine{0%{top:10%}50%{top:85%}100%{top:10%}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes hintPop{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.sc{animation:fadeUp .3s ease both}
+.hint-box{animation:slideDown 0.25s ease both}
+</style>
+
+<!-- PWA Install Banner -->
+<div id="install-banner">
+  <div style="flex:1">
+    <div data-i18n="installTitle" style="font-weight:700;color:#e8f0fe;font-size:14px;">Install NUTRYX</div>
+    <div data-i18n="installSub" style="color:#5d82b4;font-size:12px;margin-top:2px;">Add to home screen for the full app experience</div>
+  </div>
+  <button id="install-btn" data-i18n="installBtn" aria-label="Install NUTRYX" style="background:#3b82f6;color:#080d14;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">Install</button>
+  <button id="dismiss-btn" aria-label="Dismiss install prompt" style="background:none;border:none;color:#5d82b4;font-size:20px;cursor:pointer;padding:4px;">✕</button>
+</div>
+
+<!-- iOS Install Hint (shown once on iOS) -->
+<div id="ios-hint" style="display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:16px;padding:14px 16px;z-index:999;font-size:13px;color:#e8f0fe;text-align:center;">
+  <span data-i18n-html="iosHintHTML">📲 Tap <b>Share</b> then <b>"Add to Home Screen"</b> to install NUTRYX</span>
+  <button data-i18n="gotIt" onclick="document.getElementById('ios-hint').style.display='none'" style="display:block;margin:10px auto 0;background:none;border:1px solid #3b82f6;color:#3b82f6;border-radius:8px;padding:6px 20px;font-weight:700;cursor:pointer;font-size:13px;">Got it</button>
+</div>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ── Theme ────────────────────────────────────────────────────────────────────
+const T={
+  bg:"#080d14",surface:"#0d1520",surfaceHigh:"#111e2e",
+  accent:"#3b82f6",accentDim:"#1e3a5f",accentGlow:"rgba(59,130,246,0.15)",
+  text:"#e8f0fe",textMuted:"#5d82b4",
+  red:"#f87171",green:"#4ade80",amber:"#fbbf24",purple:"#a78bfa",orange:"#fb923c",cyan:"#22d3ee",
+  border:"rgba(59,130,246,0.15)",
+};
+
+// ── Storage (localStorage for PWA) ──────────────────────────────────────────
+const store={
+  get(k){try{const v=localStorage.getItem(`nutryx:${k}`);return v?JSON.parse(v):null;}catch{return null;}},
+  set(k,v){try{localStorage.setItem(`nutryx:${k}`,JSON.stringify(v));}catch{}},
+  del(k){try{localStorage.removeItem(`nutryx:${k}`);}catch{}},
+};
+
+const TODAY=new Date().toISOString().slice(0,10);
+
+// ── Claude AI (proxied) ───────────────────────────────────────────────────────
+// Calls /api/ai on the same origin so API keys are not exposed in the browser.
+async function ai(prompt,system="Respond only with valid JSON.",img=null,imgType="image/jpeg"){ 
+  try{
+    const payload = { prompt, system, img, imgType };
+    const res = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if(!res.ok){ const txt = await res.text(); throw new Error('AI proxy error: '+txt); }
+    const d = await res.json();
+    if(d && typeof d.text === 'string') return d.text.replace(/```json|```/g,"").trim();
+    if(d && d.raw){
+      const raw = d.raw;
+      const text = raw?.content?.find?.(b=>b.type==="text")?.text || raw?.completion || raw?.message || JSON.stringify(raw);
+      return String(text).replace(/```json|```/g,"").trim();
+    }
+    return '';
+  }catch(err){
+    console.error('AI request failed',err);
+    throw err;
+  }
+}
+
+// ── Food DB Search ───────────────────────────────────────────────────────────
+// USDA API key moved to server-side proxy. Do NOT store API keys in client code.
+const USDA_KEY = null;
+function extractUSDA(food){
+  const get=(id)=>{const n=food.foodNutrients?.find(x=>(x.nutrientId||x.nutrient?.id)===id);return +(n?.value||n?.amount||0).toFixed(1);};
+  return{source:"usda",found:true,name:food.description||"Unknown",brand:food.brandOwner||food.brandName||"",
+    serving:`${food.servingSize||100}${food.servingSizeUnit||"g"}`,fdcId:food.fdcId,
+    perServing:{cal:get(1008),protein:get(1003),carbs:get(1005),fat:get(1004),fiber:get(1079),sugar:get(2000),sodium:get(1093)}};
+}
+function extractOFF(p){
+  const n=p.nutriments||{};
+  return{source:"openfoodfacts",found:true,name:p.product_name||"Unknown",brand:p.brands||"",
+    image:p.image_front_small_url||null,serving:p.serving_size||"100g",nutriscore:p.nutriscore_grade?.toUpperCase()||null,
+    perServing:{cal:Math.round(n["energy-kcal_serving"]||n["energy-kcal_100g"]||0),protein:+(n["proteins_serving"]||n["proteins_100g"]||0).toFixed(1),
+      carbs:+(n["carbohydrates_serving"]||n["carbohydrates_100g"]||0).toFixed(1),fat:+(n["fat_serving"]||n["fat_100g"]||0).toFixed(1),
+      fiber:+(n["fiber_serving"]||n["fiber_100g"]||0).toFixed(1),sugar:+(n["sugars_serving"]||n["sugars_100g"]||0).toFixed(1),
+      sodium:+((n["sodium_serving"]||n["sodium_100g"]||0)*1000).toFixed(0)}};
+}
+async function searchUSDA(q){
+  try{
+    const res = await fetch('/api/usda/search', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,pageSize:12})});
+    if(!res.ok){ console.warn('USDA proxy error', await res.text()); return []; }
+    const d = await res.json();
+    return (d.foods||[]).map(extractUSDA);
+  }catch(err){ console.warn('searchUSDA error',err); return []; }
+}
+async function searchOFF(q){try{const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=8&fields=product_name,brands,nutriments,serving_size,nutriscore_grade,image_front_small_url`);const d=await r.json();return(d.products||[]).filter(p=>p.product_name).map(extractOFF);}catch{return[];}}
+async function lookupBarcode(barcode){
+  const cached=store.get(`food:bc:${barcode}`);if(cached)return{...cached,found:true,source:"local-db"};
+  try{const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);const d=await r.json();
+    if(d.status===1&&d.product){const prod=extractOFF(d.product);prod.barcode=barcode;store.set(`food:bc:${barcode}`,prod);return prod;}}catch{}
+  return{found:false};
+}
+
+const CATS=[
+  {id:"chicken",l:"🍗 Chicken",q:"chicken breast"},{id:"eggs",l:"🥚 Eggs",q:"eggs"},
+  {id:"rice",l:"🍚 Rice",q:"white rice"},{id:"beef",l:"🥩 Beef",q:"ground beef"},
+  {id:"fish",l:"🐟 Fish",q:"salmon"},{id:"pasta",l:"🍝 Pasta",q:"pasta"},
+  {id:"bread",l:"🍞 Bread",q:"whole wheat bread"},{id:"milk",l:"🥛 Dairy",q:"milk"},
+  {id:"banana",l:"🍌 Fruits",q:"banana"},{id:"broccoli",l:"🥦 Veggies",q:"broccoli"},
+  {id:"nuts",l:"🥜 Nuts",q:"almonds"},{id:"yogurt",l:"🫙 Yogurt",q:"greek yogurt"},
+  {id:"oats",l:"🌾 Oats",q:"oatmeal"},{id:"protein",l:"💪 Protein",q:"protein bar"},
+];
+
+// ── UI atoms ─────────────────────────────────────────────────────────────────
+const Card=({children,style={}})=><div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:16,padding:"16px 18px",...style}}>{children}</div>;
+const Tag=({children,color})=><span style={{background:`${color}22`,color,border:`1px solid ${color}44`,borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:700}}>{children}</span>;
+const Btn=({children,onClick,color=T.accent,disabled,style={},small})=>(
+  <button onClick={onClick} disabled={disabled}
+    style={{background:disabled?"#1e3a5f":color,color:color===T.accent||color===T.green||color===T.amber?"#080d14":"#fff",
+      border:"none",borderRadius:small?8:12,padding:small?"8px 14px":"13px 20px",fontWeight:700,
+      cursor:disabled?"not-allowed":"pointer",fontSize:small?12:15,transition:"all 0.15s",width:style.width,...style}}>
+    {children}
+  </button>
+);
+const OutlineBtn=({children,onClick,color=T.textMuted,style={},small})=>(
+  <button onClick={onClick} style={{background:"transparent",color,border:`1px solid ${color}55`,
+    borderRadius:small?8:12,padding:small?"8px 14px":"13px 20px",fontWeight:600,cursor:"pointer",fontSize:small?12:15,...style}}>
+    {children}
+  </button>
+);
+const Ring=({pct,color,size=76,stroke=7})=>{
+  const r=(size-stroke*2)/2,circ=2*Math.PI*r,dash=Math.min((pct/100)*circ,circ);
+  return(<svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.border} strokeWidth={stroke}/>
+    <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+      strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+      style={{transition:"stroke-dasharray .8s cubic-bezier(.4,0,.2,1)",filter:`drop-shadow(0 0 5px ${color})`}}/>
+  </svg>);
+};
+const Input=({value,onChange,onKeyDown,placeholder,style={},type="text"})=>(
+  <input type={type} value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder}
+    style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,borderRadius:12,padding:"13px 16px",
+      color:T.text,fontSize:16,outline:"none",width:"100%",...style}}/>
+);
+const SectionLabel=({children})=><div style={{fontWeight:700,color:T.textMuted,fontSize:11,letterSpacing:1.2,marginBottom:12}}>{children}</div>;
+
+// ── Hint / Tooltip system ─────────────────────────────────────────────────────
+// Global state: only one hint open at a time
+let _activeHintClose = null;
+
+function Hint({title,children,icon="💡",color=T.amber}){
+  const[open,setOpen]=useState(false);
+  const[pos,setPos]=useState({top:0,left:0,right:"auto",transformOrigin:"top left"});
+  const btnRef=useRef(null);
+
+  const toggle=()=>{
+    if(open){setOpen(false);_activeHintClose=null;return;}
+    // Close any other open hint
+    if(_activeHintClose)_activeHintClose();
+    // Calculate position relative to button
+    if(btnRef.current){
+      const rect=btnRef.current.getBoundingClientRect();
+      const vw=window.innerWidth;
+      const vh=window.innerHeight;
+      const boxW=Math.min(280,vw-32);
+      const spaceRight=vw-rect.right-8;
+      const spaceLeft=rect.left-8;
+      const spaceBelow=vh-rect.bottom-8;
+      const spaceAbove=rect.top-8;
+
+      let left,top,transformOrigin;
+
+      // Horizontal: prefer right of button, flip to left if not enough space
+      if(spaceRight>=boxW){
+        left=rect.right+8;
+        transformOrigin="top left";
+      } else if(spaceLeft>=boxW){
+        left=rect.left-boxW-8;
+        transformOrigin="top right";
+      } else {
+        // Center aligned
+        left=Math.max(16,Math.min(rect.left-boxW/2+13,vw-boxW-16));
+        transformOrigin="top center";
+      }
+
+      // Vertical: prefer below button, flip above if not enough space
+      if(spaceBelow>=120){
+        top=rect.bottom+6;
+      } else if(spaceAbove>=120){
+        top=rect.top-6; // will use translateY(-100%)
+        transformOrigin=transformOrigin.replace("top","bottom");
+      } else {
+        top=Math.max(60,rect.top-80);
+      }
+
+      setPos({top,left,width:boxW,transformOrigin,flipY:spaceBelow<120&&spaceAbove>=120});
+    }
+    setOpen(true);
+    _activeHintClose=()=>setOpen(false);
+  };
+
+  // Close on outside click
+  useEffect(()=>{
+    if(!open)return;
+    const handler=(e)=>{if(btnRef.current&&!btnRef.current.closest('[data-hint]')?.contains(e.target)){setOpen(false);_activeHintClose=null;}};
+    setTimeout(()=>document.addEventListener("click",handler),10);
+    return()=>document.removeEventListener("click",handler);
+  },[open]);
+
+  return(
+    <div data-hint="1" style={{display:"inline-flex",alignItems:"center",position:"relative"}}>
+      <button ref={btnRef} onClick={toggle}
+        style={{background:open?`${color}33`:`${color}15`,border:`1px solid ${color}${open?"88":"44"}`,borderRadius:20,
+          width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",
+          cursor:"pointer",fontSize:12,fontWeight:800,color,flexShrink:0,transition:"all 0.15s",
+          boxShadow:open?`0 0 0 3px ${color}22`:"none"}}>?</button>
+
+      {open&&(
+        <>
+          {/* Invisible backdrop */}
+          <div onClick={()=>{setOpen(false);_activeHintClose=null;}} style={{position:"fixed",inset:0,zIndex:298}}/>
+          {/* Popup box */}
+          <div style={{
+            position:"fixed",
+            top:pos.top,
+            left:pos.left,
+            width:pos.width,
+            zIndex:299,
+            background:T.surface,
+            border:`1.5px solid ${color}88`,
+            borderRadius:14,
+            padding:"14px 16px",
+            boxShadow:`0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px ${color}22`,
+            transform:pos.flipY?"translateY(-100%)":"none",
+            transformOrigin:pos.transformOrigin,
+            animation:"hintPop 0.18s cubic-bezier(.34,1.56,.64,1) both",
+          }}>
+            {/* Arrow pointer toward button */}
+            <div style={{
+              position:"absolute",
+              width:10,height:10,
+              background:T.surface,
+              border:`1.5px solid ${color}88`,
+              transform:"rotate(45deg)",
+              ...(pos.flipY
+                ? {bottom:-6, left:pos.left>btnRef.current?.getBoundingClientRect().right?"auto":12, borderTop:"none",borderLeft:"none"}
+                : {top:-6, left:pos.left>btnRef.current?.getBoundingClientRect().right?"auto":12, borderBottom:"none",borderRight:"none"}
+              ),
+            }}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:18}}>{icon}</span>
+                <span style={{fontWeight:800,color:T.text,fontSize:14}}>{title}</span>
+              </div>
+              <button onClick={()=>{setOpen(false);_activeHintClose=null;}}
+                style={{background:T.surfaceHigh,border:"none",color:T.textMuted,fontSize:16,cursor:"pointer",
+                  lineHeight:1,width:24,height:24,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✕</button>
+            </div>
+            <div style={{color:T.textMuted,fontSize:13,lineHeight:1.7,whiteSpace:"pre-line"}}>{children}</div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Feature tour shown once on first launch
+function FeatureTour({onDone}){
+  const[step,setStep]=useState(0);
+  const steps=[
+    {icon:"🏠",title:L('tour_step1_title'),desc:L('tour_step1_desc')},
+    {icon:"🥗",title:L('tour_step2_title'),desc:L('tour_step2_desc')},
+    {icon:"📷",title:L('tour_step3_title'),desc:L('tour_step3_desc')},
+    {icon:"📸",title:L('tour_step4_title'),desc:L('tour_step4_desc')},
+    {icon:"💪",title:L('tour_step5_title'),desc:L('tour_step5_desc')},
+    {icon:"💧",title:L('tour_step6_title'),desc:L('tour_step6_desc')},
+    {icon:"⚖️",title:L('tour_step7_title'),desc:L('tour_step7_desc')},
+    {icon:"🏆",title:L('tour_step8_title'),desc:L('tour_step8_desc')},
+  ];
+  const s=steps[step];
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",padding:"0 20px 40px"}}>
+      <div style={{width:"100%",maxWidth:440,background:T.surface,borderRadius:24,padding:28,border:`1px solid ${T.accent}44`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <div style={{fontSize:11,color:T.textMuted,fontWeight:700,letterSpacing:1}}>{step+1} OF {steps.length}</div>
+          <button onClick={onDone} style={{background:"none",border:"none",color:T.textMuted,fontSize:13,cursor:"pointer",fontWeight:600}}>{L('tourSkip')}</button>
+        </div>
+        <div style={{display:"flex",gap:6,marginBottom:20}}>
+          {steps.map((_,i)=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?T.accent:T.accentDim,transition:"background 0.3s"}}/>)}
+        </div>
+        <div style={{fontSize:40,marginBottom:12}}>{s.icon}</div>
+        <div style={{fontSize:22,fontWeight:800,color:T.text,marginBottom:10}}>{s.title}</div>
+        <div style={{fontSize:15,color:T.textMuted,lineHeight:1.7,marginBottom:24}}>{s.desc}</div>
+        <div style={{display:"flex",gap:12}}>
+          {step>0&&<button onClick={()=>setStep(s=>s-1)} style={{flex:1,background:T.surfaceHigh,border:`1px solid ${T.border}`,color:T.text,borderRadius:14,padding:"14px",fontWeight:700,cursor:"pointer",fontSize:15}}>{L('tourBack')}</button>}
+          <button onClick={()=>step===steps.length-1?onDone():setStep(s=>s+1)} style={{flex:2,background:T.accent,color:"#080d14",border:"none",borderRadius:14,padding:"14px",fontWeight:800,cursor:"pointer",fontSize:15}}>{step===steps.length-1?L('tourStart'):L('tourNext')}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Onboarding ────────────────────────────────────────────────────────────────
+function Onboarding({onDone}){
+  const[step,setStep]=useState(0);
+  const[data,setData]=useState({name:"",age:"",weight:"",height:"",goal:"lose",activity:"moderate",calGoal:2000,proteinGoal:150,waterGoal:8});
+  const set=(k,v)=>setData(d=>({...d,[k]:v}));
+  const goals=[{v:"lose",l:"🔥 Lose Weight"},{v:"maintain",l:"⚖️ Maintain Weight"},{v:"gain",l:"💪 Gain Muscle"}];
+  const acts=[{v:"sedentary",l:"🪑 Sedentary"},{v:"light",l:"🚶 Light Active"},{v:"moderate",l:"🏃 Moderate"},{v:"active",l:"⚡ Very Active"}];
+  const calc=()=>{
+    const w=parseFloat(data.weight)||75,h=parseFloat(data.height)||170,a=parseFloat(data.age)||25;
+    const bmr=10*w+6.25*h-5*a+5;
+    const mult={sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[data.activity]||1.55;
+    const tdee=Math.round(bmr*mult);
+    const cal=data.goal==="lose"?tdee-400:data.goal==="gain"?tdee+300:tdee;
+    set("calGoal",cal);set("proteinGoal",Math.round(w*(data.goal==="gain"?2:1.6)));setStep(3);
+  };
+  const finish=()=>{store.set("profile",data);store.set("streaks",{water:0,calories:0,workout:0,lastDate:""});onDone(data);};
+  return(
+    <div style={{minHeight:"100dvh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 20px"}}>
+      <div style={{width:"100%",maxWidth:420}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{fontSize:40,fontWeight:900,color:T.accent,letterSpacing:-1}}>NUTRYX</div>
+          <div style={{color:T.textMuted,fontSize:14,marginTop:4}}>{L('tagline')}</div>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:20}}>
+            {[0,1,2,3].map(i=><div key={i} style={{width:i===step?28:8,height:8,borderRadius:4,background:i<=step?T.accent:T.accentDim,transition:"all 0.3s"}}/>)}
+          </div>
+        </div>
+        <Card style={{padding:24}}>
+          {step===0&&<>
+            <div style={{fontSize:22,fontWeight:800,color:T.text,marginBottom:8}}>{L('welcome')}</div>
+            <div style={{color:T.textMuted,fontSize:14,marginBottom:20,lineHeight:1.6}}>{L('onboarding_sub')}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <Input value={data.name} onChange={e=>set("name",e.target.value)} placeholder="Your name"/>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                <Input value={data.age} onChange={e=>set("age",e.target.value)} placeholder="Age" type="number"/>
+                <Input value={data.weight} onChange={e=>set("weight",e.target.value)} placeholder="kg" type="number"/>
+                <Input value={data.height} onChange={e=>set("height",e.target.value)} placeholder="cm" type="number"/>
+              </div>
+            </div>
+            <Btn onClick={()=>setStep(1)} style={{marginTop:20,width:"100%"}}>{L('continueBtn')}</Btn>
+          </>}
+          {step===1&&<>
+            <div style={{fontSize:22,fontWeight:800,color:T.text,marginBottom:20}}>{L('yourGoal')}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+              {goals.map(g=><button key={g.v} onClick={()=>set("goal",g.v)}
+                style={{background:data.goal===g.v?T.accent:T.surfaceHigh,color:data.goal===g.v?"#080d14":T.text,
+                  border:`1px solid ${data.goal===g.v?T.accent:T.border}`,borderRadius:14,padding:"16px 18px",
+                  fontWeight:700,cursor:"pointer",fontSize:16,textAlign:"left",transition:"all 0.2s"}}>{g.l}</button>)}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <OutlineBtn onClick={()=>setStep(0)} style={{flex:1}}>{L('tourBack')}</OutlineBtn>
+              <Btn onClick={()=>setStep(2)} style={{flex:2}}>{L('continueBtn')}</Btn>
+            </div>
+          </>}
+          {step===2&&<>
+            <div style={{fontSize:22,fontWeight:800,color:T.text,marginBottom:20}}>{L('activityLevel')}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+              {acts.map(a=><button key={a.v} onClick={()=>set("activity",a.v)}
+                style={{background:data.activity===a.v?T.accent:T.surfaceHigh,color:data.activity===a.v?"#080d14":T.text,
+                  border:`1px solid ${data.activity===a.v?T.accent:T.border}`,borderRadius:14,padding:"14px 18px",
+                  fontWeight:700,cursor:"pointer",fontSize:15,textAlign:"left",transition:"all 0.2s"}}>{a.l}</button>)}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <OutlineBtn onClick={()=>setStep(1)} style={{flex:1}}>{L('tourBack')}</OutlineBtn>
+              <Btn onClick={calc} style={{flex:2}}>{L('calculateBtn')}</Btn>
+            </div>
+          </>}
+          {step===3&&<>
+            <div style={{fontSize:22,fontWeight:800,color:T.text,marginBottom:4}}>{L('yourGoals')}</div>
+            <div style={{color:T.textMuted,fontSize:13,marginBottom:20}}>Calculated for you. Adjust anytime.</div>
+            {[{l:"Daily Calories",k:"calGoal",u:"kcal",c:T.accent,step:50},{l:"Protein Goal",k:"proteinGoal",u:"g",c:T.cyan,step:5},{l:"Water Goal",k:"waterGoal",u:"glasses",c:T.accent,step:1}].map(g=>(
+              <div key={g.k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 0",borderBottom:`1px solid ${T.border}`}}>
+                <span style={{color:T.text,fontWeight:600}}>{g.l}</span>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <button onClick={()=>set(g.k,Math.max(0,data[g.k]-g.step))} style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,color:T.text,borderRadius:8,width:34,height:34,cursor:"pointer",fontWeight:700,fontSize:16}}>−</button>
+                  <span style={{color:g.c,fontWeight:800,fontSize:18,minWidth:70,textAlign:"center"}}>{data[g.k]}{g.u}</span>
+                  <button onClick={()=>set(g.k,data[g.k]+g.step)} style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,color:T.text,borderRadius:8,width:34,height:34,cursor:"pointer",fontWeight:700,fontSize:16}}>+</button>
+                </div>
+              </div>
+            ))}
+            <Btn onClick={finish} style={{marginTop:20,width:"100%"}}>{L('startApp')}</Btn>
+          </>}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ── Barcode Scanner ──────────────────────────────────────────────────────────
+function BarcodeScanner({onResult,onClose}){
+  const videoRef=useRef(null),streamRef=useRef(null),intervalRef=useRef(null),canvasRef=useRef(document.createElement("canvas"));
+  const[status,setStatus]=useState("starting"),[manual,setManual]=useState(""),[hint,setHint]=useState(L('barcodeHint')||"Point camera at barcode");
+  const stop=useCallback(()=>{
+    clearInterval(intervalRef.current);
+    if(streamRef.current){streamRef.current.getTracks().forEach(t=>t.stop());streamRef.current=null;}
+  },[]);
+
+  useEffect(()=>{
+    let ok=true;
+    const startCam=async()=>{
+      try{
+        // Request highest resolution for better scanning on iPhone
+        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:"environment"},width:{ideal:1920},height:{ideal:1080}}}).catch(()=>
+          navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}));
+        if(!ok){s.getTracks().forEach(t=>t.stop());return;}
+        streamRef.current=s;
+        if(videoRef.current){videoRef.current.srcObject=s;await videoRef.current.play();setStatus("scanning");}
+      }catch(e){setStatus("no-camera");}
+    };
+    startCam();
+    return()=>{ok=false;stop();};
+  },[stop]);
+
+  // iPhone-optimized scanning: try multiple libs with fallback
+  useEffect(()=>{
+    if(status!=="scanning")return;
+    let frameCount=0;
+    const scan=async()=>{
+      const v=videoRef.current;if(!v||v.readyState<2)return;
+      frameCount++;
+      // Update hint periodically to guide user
+      if(frameCount===15)setHint("Hold steady, make sure barcode is well lit 💡");
+      if(frameCount===40)setHint("Try moving closer to the barcode 🔍");
+      if(frameCount===70)setHint("Try angling the camera slightly 📐");
+      const c=canvasRef.current;
+      c.width=v.videoWidth;c.height=v.videoHeight;
+      const ctx=c.getContext("2d");
+      ctx.drawImage(v,0,0);
+
+      // Method 1: Try BarcodeDetector API (native iOS 17+ / Chrome)
+      if(window.BarcodeDetector){
+        try{
+          const bd=new window.BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128","code_39","qr_code","itf","codabar"]});
+          const codes=await bd.detect(c);
+          if(codes.length>0){stop();onResult(codes[0].rawValue);return;}
+        }catch{}
+      }
+
+      // Method 2: ZXing
+      if(window.ZXing){
+        try{
+          const reader=new window.ZXing.BrowserMultiFormatReader();
+          // Try multiple hints for better detection
+          const hints=new Map();
+          hints.set(window.ZXing.DecodeHintType?.TRY_HARDER,[true]);
+          const imgData=c.toDataURL("image/png");
+          const result=await reader.decodeFromImageUrl(imgData);
+          if(result){stop();onResult(result.getText());return;}
+        }catch{}
+      }
+
+      // Method 3: QuaggaJS
+      if(window.Quagga){
+        try{
+          const imgData=c.toDataURL("image/jpeg",0.9);
+          window.Quagga.decodeSingle({src:imgData,numOfWorkers:0,inputStream:{size:800},decoder:{readers:["ean_reader","ean_8_reader","upc_reader","upc_e_reader","code_128_reader","code_39_reader"]}},r=>{
+            if(r&&r.codeResult){stop();onResult(r.codeResult.code);}
+          });
+        }catch{}
+      }
+    };
+
+    // Load all scanning libraries
+    const loadLib=(src)=>new Promise(res=>{if(document.querySelector(`script[src="${src}"]`)){res();return;}const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=res;document.head.appendChild(s);});
+    Promise.all([
+      loadLib("https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.20.0/zxing.min.js"),
+      loadLib("https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"),
+    ]).then(()=>{
+      intervalRef.current=setInterval(scan,400);
+    });
+    return()=>clearInterval(intervalRef.current);
+  },[status,onResult,stop]);
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:200,display:"flex",flexDirection:"column",padding:"env(safe-area-inset-top) 20px 20px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 0"}}>
+        <span style={{fontWeight:800,fontSize:18,color:T.accent}}>📷 Scan Barcode</span>
+        <button onClick={()=>{stop();onClose();}} style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,color:T.text,borderRadius:10,padding:"8px 16px",fontWeight:700,cursor:"pointer",fontSize:14}}>Close</button>
+      </div>
+      <div style={{position:"relative",borderRadius:20,overflow:"hidden",background:"#000",flex:1,maxHeight:"55vh",border:`2px solid ${T.accent}44`}}>
+        <video ref={videoRef} muted playsInline style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+        {status==="scanning"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+          <div style={{width:"75%",height:"28%",position:"relative"}}>
+            {[{top:0,left:0,borderTop:`3px solid ${T.accent}`,borderLeft:`3px solid ${T.accent}`},{top:0,right:0,borderTop:`3px solid ${T.accent}`,borderRight:`3px solid ${T.accent}`},{bottom:0,left:0,borderBottom:`3px solid ${T.accent}`,borderLeft:`3px solid ${T.accent}`},{bottom:0,right:0,borderBottom:`3px solid ${T.accent}`,borderRight:`3px solid ${T.accent}`}].map((s,i)=><div key={i} style={{position:"absolute",width:28,height:28,...s}}/>)}
+            <div style={{position:"absolute",left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${T.accent},transparent)`,boxShadow:`0 0 8px ${T.accent}`,animation:"scanLine 1.8s ease-in-out infinite"}}/>
+          </div>
+          <div style={{position:"absolute",bottom:20,left:0,right:0,textAlign:"center"}}>
+            <div style={{background:"rgba(0,0,0,0.7)",color:T.text,fontSize:13,padding:"8px 16px",borderRadius:20,display:"inline-block"}}>{hint}</div>
+          </div>
+        </div>}
+        {status==="starting"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:T.textMuted,fontSize:14}}>Starting camera…</div>}
+        {status==="no-camera"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,padding:24,textAlign:"center"}}><span style={{fontSize:48}}>📵</span><span style={{color:T.textMuted,fontSize:14}}>Camera unavailable — use manual entry below</span></div>}
+      </div>
+      <div style={{marginTop:16}}>
+        <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:10}}>ENTER BARCODE MANUALLY</div>
+        <div style={{display:"flex",gap:10}}>
+          <Input value={manual} onChange={e=>setManual(e.target.value)} onKeyDown={e=>e.key==="Enter"&&manual.trim()&&(stop(),onResult(manual.trim()))} placeholder="e.g. 8410076901033" type="number"/>
+          <Btn onClick={()=>manual.trim()&&(stop(),onResult(manual.trim()))} style={{flexShrink:0,whiteSpace:"nowrap"}}>Look Up</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Photo Scanner ────────────────────────────────────────────────────────────
+function PhotoScanner({onResult,onClose}){
+  const fileRef=useRef(null),videoRef=useRef(null),streamRef=useRef(null);
+  const[mode,setMode]=useState("choose"),[preview,setPreview]=useState(null),[pType,setPType]=useState("image/jpeg"),[busy,setBusy]=useState(false),[err,setErr]=useState("");
+  const stop=useCallback(()=>{streamRef.current?.getTracks().forEach(t=>t.stop());streamRef.current=null;},[]);
+  const startCam=async()=>{setMode("camera");try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});streamRef.current=s;if(videoRef.current){videoRef.current.srcObject=s;videoRef.current.play();}}catch{setErr("Camera unavailable. Upload a photo instead.");setMode("choose");}};
+  const capture=()=>{if(!videoRef.current)return;const c=document.createElement("canvas");c.width=videoRef.current.videoWidth;c.height=videoRef.current.videoHeight;c.getContext("2d").drawImage(videoRef.current,0,0);stop();setPreview(c.toDataURL("image/jpeg",0.9));setPType("image/jpeg");setMode("preview");};
+  const handleFile=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{setPreview(ev.target.result);setPType(f.type||"image/jpeg");setMode("preview");};r.readAsDataURL(f);};
+  const analyze=async()=>{setBusy(true);setErr("");
+    try{const t=await ai(`Look at this food product. Extract all nutrition info. Return ONLY JSON:{"name":"...","brand":"...","serving":"...","perServing":{"cal":0,"protein":0,"carbs":0,"fat":0,"fiber":0,"sugar":0,"sodium":0},"nutriscore":null,"insight":"one sentence health insight","confidence":"high|medium|low"}. If not food return {"error":"not food"}.`,
+      "You are a nutrition expert. Extract facts from packaging. Return only valid JSON.",preview.split(",")[1],pType);
+      const p=JSON.parse(t);if(p.error){setErr("Couldn't identify food. Try a clearer photo.");setBusy(false);return;}onResult(p);}
+    catch{setErr("Analysis failed. Try again.");}setBusy(false);};
+  useEffect(()=>()=>stop(),[stop]);
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:200,display:"flex",flexDirection:"column",padding:"env(safe-area-inset-top) 20px 20px",overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 0"}}>
+        <span style={{fontWeight:800,fontSize:18,color:T.cyan}}>📸 Photo Scan</span>
+        <button onClick={()=>{stop();onClose();}} style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,color:T.text,borderRadius:10,padding:"8px 16px",fontWeight:700,cursor:"pointer",fontSize:14}}>Close</button>
+      </div>
+      {mode==="choose"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <Card style={{textAlign:"center",padding:24,color:T.textMuted,fontSize:15,lineHeight:1.7}}>Point at the <b style={{color:T.text}}>front of any package</b> or <b style={{color:T.text}}>nutrition label</b>. AI reads everything.</Card>
+        <Btn onClick={startCam} color={T.cyan} style={{width:"100%"}}>📷 Take Photo</Btn>
+        <OutlineBtn onClick={()=>fileRef.current?.click()} style={{width:"100%"}}>🖼️ Upload from Gallery</OutlineBtn>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{display:"none"}}/>
+        {err&&<div style={{color:T.red,fontSize:13,textAlign:"center",padding:10}}>{err}</div>}
+      </div>}
+      {mode==="camera"&&<div style={{display:"flex",flexDirection:"column",gap:12,flex:1}}>
+        <div style={{position:"relative",borderRadius:20,overflow:"hidden",background:"#000",flex:1,maxHeight:"55vh",border:`2px solid ${T.cyan}66`}}>
+          <video ref={videoRef} muted playsInline style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+            <div style={{width:"85%",height:"80%",border:`2px dashed ${T.cyan}66`,borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <span style={{color:`${T.cyan}88`,fontSize:13,background:"rgba(0,0,0,0.6)",padding:"6px 14px",borderRadius:10}}>Point at label or front</span>
+            </div>
+          </div>
+        </div>
+        <Btn onClick={capture} color={T.cyan} style={{width:"100%"}}>📸 Capture</Btn>
+        <OutlineBtn onClick={()=>{stop();setMode("choose");}} style={{width:"100%"}}>← Back</OutlineBtn>
+      </div>}
+      {mode==="preview"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <img src={preview} alt="Photo preview" style={{width:"100%",borderRadius:16,border:`2px solid ${T.cyan}44`,maxHeight:"45vh",objectFit:"contain",background:"#111"}}/>
+        {busy?<div style={{textAlign:"center",padding:"24px 0",color:T.textMuted}}><div style={{fontSize:36,animation:"spin 1.2s linear infinite",display:"inline-block"}}>✨</div><div style={{fontSize:14,marginTop:10}}>Reading product…</div></div>
+        :<><Btn onClick={analyze} color={T.cyan} style={{width:"100%"}}>✨ Analyze with AI</Btn><OutlineBtn onClick={()=>{setPreview(null);setMode("choose");setErr("");}} style={{width:"100%"}}>← Retake</OutlineBtn></>}
+        {err&&<div style={{color:T.red,fontSize:13,padding:"10px 14px",background:`${T.red}15`,borderRadius:10,border:`1px solid ${T.red}33`}}>{err}</div>}
+      </div>}
+    </div>
+  );
+}
+
+// ── Product result card ───────────────────────────────────────────────────────
+function ProductCard({product,onAdd,onRescan,scanType}){
+  const[servings,setServings]=useState(1),[saved,setSaved]=useState(false);
+  const p=product.perServing;
+  const nc={A:"#037d3a",B:"#85bb2f",C:"#fecb02",D:"#ee8100",E:"#e63e11"};
+  const srcColor={openfoodfacts:T.green,"local-db":T.purple,"ai-photo":T.cyan,ai:T.amber,usda:T.green};
+  const srcLabel={openfoodfacts:"🌍 Open Food Facts","local-db":"⚡ Saved","ai-photo":"✨ AI Photo",ai:"🤖 AI",usda:"🇺🇸 USDA"};
+  const handleAdd=()=>{
+    const k=`food:n:${(product.name||"").toLowerCase().replace(/\s+/g,"-")}`;
+    store.set(k,{...product,savedAt:Date.now()});
+    if(product.barcode)store.set(`food:bc:${product.barcode}`,{...product,savedAt:Date.now()});
+    setSaved(true);
+    onAdd({name:`${product.name}${product.brand?` (${product.brand})`:""}`,cal:Math.round(p.cal*servings),protein:+(p.protein*servings).toFixed(1),carbs:+(p.carbs*servings).toFixed(1),fat:+(p.fat*servings).toFixed(1)});
+  };
+  return(
+    <div style={{marginTop:8,padding:"16px",background:T.accentGlow,borderRadius:14,border:`1px solid ${T.accentDim}`}}>
+      <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+        <Tag color={srcColor[product.source]||T.textMuted}>{srcLabel[product.source]||product.source}</Tag>
+        {product.nutriscore&&<span style={{background:nc[product.nutriscore]||"#555",color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:800}}>NS-{product.nutriscore}</span>}
+      </div>
+      <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:14}}>
+        {product.image&&<img src={product.image} alt={product.name||"Product image"} style={{width:60,height:60,objectFit:"contain",borderRadius:8,background:"#fff",padding:4,flexShrink:0}}/>}
+        <div><div style={{fontWeight:800,color:T.text,fontSize:16,lineHeight:1.3}}>{product.name}</div>{product.brand&&<div style={{color:T.textMuted,fontSize:13,marginTop:2}}>{product.brand}</div>}{product.serving&&<div style={{color:T.textMuted,fontSize:12,marginTop:4}}>Per {product.serving}</div>}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>
+        {[{l:"Calories",v:p.cal,u:"kcal",c:T.accent},{l:"Protein",v:p.protein,u:"g",c:T.cyan},{l:"Carbs",v:p.carbs,u:"g",c:T.amber},{l:"Fat",v:p.fat,u:"g",c:T.red},{l:"Fiber",v:p.fiber||0,u:"g",c:T.purple},{l:"Sodium",v:p.sodium||0,u:"mg",c:T.orange}].map(m=>(
+          <div key={m.l} style={{background:T.surfaceHigh,borderRadius:10,padding:"10px 8px",textAlign:"center"}}>
+            <div style={{fontSize:16,fontWeight:800,color:m.c}}>{+(m.v*(servings||1)).toFixed(1)}<span style={{fontSize:10,color:T.textMuted}}>{m.u}</span></div>
+            <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{m.l}</div>
+          </div>
+        ))}
+      </div>
+      {product.insight&&<div style={{marginBottom:14,padding:"10px 12px",background:`${T.cyan}10`,border:`1px solid ${T.cyan}33`,borderRadius:10,fontSize:13,color:T.textMuted,fontStyle:"italic"}}>💡 {product.insight}</div>}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+        <span style={{color:T.textMuted,fontSize:14,fontWeight:600}}>Servings:</span>
+        <div style={{display:"flex",alignItems:"center",gap:10,background:T.surfaceHigh,borderRadius:12,padding:"6px 14px"}}>
+          <button onClick={()=>setServings(s=>Math.max(0.25,+(s-0.25).toFixed(2)))} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>−</button>
+          <span style={{color:T.text,fontWeight:800,fontSize:20,minWidth:36,textAlign:"center"}}>{servings}</span>
+          <button onClick={()=>setServings(s=>+(s+0.25).toFixed(2))} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>+</button>
+        </div>
+        <span style={{color:T.textMuted,fontSize:13}}>{Math.round(p.cal*servings)} kcal</span>
+      </div>
+      {saved&&<div style={{marginBottom:10,padding:"8px 12px",background:`${T.green}15`,border:`1px solid ${T.green}44`,borderRadius:8,fontSize:13,color:T.green}}>✓ Saved to your database!</div>}
+      <div style={{display:"flex",gap:10}}>
+        <Btn onClick={handleAdd} style={{flex:1}}>✓ Add to Log</Btn>
+        <OutlineBtn onClick={onRescan}>{scanType==="photo"?"📸 Rescan":"🔄 Rescan"}</OutlineBtn>
+      </div>
+    </div>
+  );
+}
+
+// ── Food Search ───────────────────────────────────────────────────────────────
+function FoodSearch({onAdd,profile}){
+  const[query,setQuery]=useState(""),[results,setResults]=useState([]),[busy,setBusy]=useState(false);
+  const[selected,setSelected]=useState(null),[servings,setServings]=useState(1);
+  const[cat,setCat]=useState(null),[recent,setRecent]=useState([]);
+  const debRef=useRef(null);
+  useEffect(()=>{setRecent(store.get("recent-foods")||[]);}, []);
+  const search=useCallback(async(q)=>{
+    if(!q.trim()){setResults([]);return;}setBusy(true);
+    const cached=store.get(`search:${q.toLowerCase()}`);
+    if(cached&&Date.now()-cached.ts<3600000){setResults(cached.data);setBusy(false);return;}
+    const[u,o]=await Promise.all([searchUSDA(q),searchOFF(q)]);
+    const merged=[...u,...o].filter((v,i,a)=>a.findIndex(x=>x.name===v.name)===i);
+    store.set(`search:${q.toLowerCase()}`,{data:merged,ts:Date.now()});
+    setResults(merged);setBusy(false);
+  },[]);
+  useEffect(()=>{clearTimeout(debRef.current);if(!query.trim()){setResults([]);return;}debRef.current=setTimeout(()=>search(query),400);return()=>clearTimeout(debRef.current);},[query,search]);
+  const loadCat=async(c)=>{setCat(c.id);setQuery(c.q);await search(c.q);};
+  const selectFood=(f)=>{setSelected(f);setServings(1);};
+  const addFood=()=>{if(!selected)return;const p=selected.perServing;
+    const item={name:`${selected.name}${selected.brand?` (${selected.brand})`:""}`,cal:Math.round(p.cal*servings),protein:+(p.protein*servings).toFixed(1),carbs:+(p.carbs*servings).toFixed(1),fat:+(p.fat*servings).toFixed(1)};
+    onAdd(item);const rf=[selected,...(recent||[]).filter(f=>f.name!==selected.name)].slice(0,10);setRecent(rf);store.set("recent-foods",rf);
+    store.set(`food:n:${selected.name.toLowerCase().replace(/\s+/g,"-")}`,{...selected,savedAt:Date.now()});setSelected(null);};
+  const srcColor={usda:T.green,openfoodfacts:T.accent,ai:T.amber,"local-db":T.purple};
+  const srcLabel={usda:"USDA",openfoodfacts:"Branded",ai:"AI","local-db":"Saved"};
+  const nc={A:"#037d3a",B:"#85bb2f",C:"#fecb02",D:"#ee8100",E:"#e63e11"};
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      {/* Search box */}
+      <div style={{position:"relative"}}>
+        <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",fontSize:18,color:T.textMuted,pointerEvents:"none"}}>🔍</span>
+        <input value={query} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="Search 300,000+ foods…"
+          style={{width:"100%",background:T.surfaceHigh,border:`1px solid ${T.border}`,borderRadius:14,padding:"14px 44px",color:T.text,fontSize:16,outline:"none"}}/>
+        {query&&<button onClick={()=>{setQuery("");setResults([]);setSelected(null);}} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:20,lineHeight:1}}>✕</button>}
+      </div>
+      {/* Category chips */}
+      <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+        {CATS.map(c=><button key={c.id} onClick={()=>loadCat(c)}
+          style={{background:cat===c.id?T.accentDim:"transparent",color:cat===c.id?T.accent:T.textMuted,border:`1px solid ${cat===c.id?T.accent:T.border}`,borderRadius:20,padding:"8px 16px",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,transition:"all 0.2s"}}>
+          {c.l}</button>)}
+      </div>
+      {/* Selected detail */}
+      {selected&&<div style={{background:T.accentGlow,border:`1px solid ${T.accentDim}`,borderRadius:14,padding:"16px"}}>
+        <div style={{fontWeight:800,color:T.text,fontSize:16,marginBottom:4}}>{selected.name}</div>
+        {selected.brand&&<div style={{color:T.textMuted,fontSize:13,marginBottom:10}}>{selected.brand}</div>}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>
+          {[{l:"Cal",v:selected.perServing.cal,u:"kcal",c:T.accent},{l:"Protein",v:selected.perServing.protein,u:"g",c:T.cyan},{l:"Carbs",v:selected.perServing.carbs,u:"g",c:T.amber},{l:"Fat",v:selected.perServing.fat,u:"g",c:T.red},{l:"Fiber",v:selected.perServing.fiber||0,u:"g",c:T.purple},{l:"Sodium",v:selected.perServing.sodium||0,u:"mg",c:T.orange}].map(m=>(
+            <div key={m.l} style={{background:T.surfaceHigh,borderRadius:10,padding:"10px 8px",textAlign:"center"}}>
+              <div style={{fontSize:15,fontWeight:800,color:m.c}}>{+(m.v*servings).toFixed(1)}<span style={{fontSize:10,color:T.textMuted}}>{m.u}</span></div>
+              <div style={{fontSize:11,color:T.textMuted}}>{m.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+          <span style={{color:T.textMuted,fontSize:14,fontWeight:600}}>Servings:</span>
+          <div style={{display:"flex",alignItems:"center",gap:10,background:T.surfaceHigh,borderRadius:12,padding:"6px 14px"}}>
+            <button onClick={()=>setServings(s=>Math.max(0.25,+(s-0.25).toFixed(2)))} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700}}>−</button>
+            <span style={{color:T.text,fontWeight:800,fontSize:20,minWidth:36,textAlign:"center"}}>{servings}</span>
+            <button onClick={()=>setServings(s=>+(s+0.25).toFixed(2))} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700}}>+</button>
+          </div>
+          <span style={{color:T.textMuted,fontSize:13}}>{Math.round(selected.perServing.cal*servings)} kcal</span>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <Btn onClick={addFood} style={{flex:1}}>✓ Add to Log</Btn>
+          <OutlineBtn onClick={()=>setSelected(null)}>✕</OutlineBtn>
+        </div>
+      </div>}
+      {/* Busy */}
+      {busy&&!selected&&<div style={{textAlign:"center",padding:"24px 0",color:T.textMuted}}><div style={{fontSize:32,animation:"spin 1s linear infinite",display:"inline-block"}}>🔍</div><div style={{fontSize:14,marginTop:8}}>Searching databases…</div></div>}
+      {/* Recent */}
+      {!query&&!busy&&recent.length>0&&!selected&&<div>
+        <SectionLabel>🕐 RECENTLY LOGGED</SectionLabel>
+        {recent.slice(0,5).map((f,i)=>(
+          <div key={i} onClick={()=>selectFood(f)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px",background:T.surfaceHigh,borderRadius:12,cursor:"pointer",marginBottom:8,border:`1px solid transparent`}}>
+            <div><div style={{fontWeight:600,color:T.text,fontSize:15}}>{f.name}</div>{f.brand&&<div style={{fontSize:12,color:T.textMuted,marginTop:2}}>{f.brand}</div>}</div>
+            <div style={{textAlign:"right"}}><div style={{color:T.accent,fontWeight:700}}>{f.perServing?.cal} kcal</div><div style={{fontSize:12,color:T.textMuted}}>{f.perServing?.protein}g P</div></div>
+          </div>
+        ))}
+      </div>}
+      {/* Results */}
+      {results.length>0&&!selected&&<div>
+        <SectionLabel>{results.length} RESULTS</SectionLabel>
+        {results.map((f,i)=>(
+          <div key={i} onClick={()=>selectFood(f)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px",background:T.surfaceHigh,borderRadius:12,cursor:"pointer",marginBottom:8,border:`1px solid transparent`}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:600,color:T.text,fontSize:15,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.name}</div>
+              <div style={{display:"flex",gap:6,marginTop:4,alignItems:"center"}}>
+                <span style={{fontSize:11,color:srcColor[f.source]||T.textMuted,fontWeight:700}}>{srcLabel[f.source]}</span>
+                {f.brand&&<span style={{fontSize:12,color:T.textMuted}}>· {f.brand}</span>}
+                {f.nutriscore&&<span style={{background:nc[f.nutriscore]||"#555",color:"#fff",borderRadius:4,padding:"1px 5px",fontSize:10,fontWeight:700}}>NS-{f.nutriscore}</span>}
+              </div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0,marginLeft:12}}>
+              <div style={{color:T.accent,fontWeight:800,fontSize:15}}>{f.perServing?.cal}<span style={{fontSize:10,color:T.textMuted}}>kcal</span></div>
+              <div style={{fontSize:12,color:T.textMuted}}>{f.perServing?.protein}g P</div>
+            </div>
+          </div>
+        ))}
+      </div>}
+      {!busy&&query&&results.length===0&&!selected&&<div style={{textAlign:"center",padding:"30px 0",color:T.textMuted}}>
+        <div style={{fontSize:36,marginBottom:10}}>🔍</div><div style={{fontSize:14}}>No results for "<b style={{color:T.text}}>{query}</b>"</div>
+      </div>}
+      {!query&&!busy&&<div style={{padding:"14px",background:T.accentGlow,borderRadius:12,border:`1px solid ${T.accentDim}`,fontSize:13,color:T.textMuted,display:"flex",gap:10,alignItems:"flex-start"}}>
+        <span style={{fontSize:18,flexShrink:0}}>ℹ️</span>
+        <span><b style={{color:T.text}}>300,000+</b> USDA foods · <b style={{color:T.text}}>3M+</b> branded products · AI fallback</span>
+      </div>}
+    </div>
+  );
+}
+
+// ── Home Section ──────────────────────────────────────────────────────────────
+function HomeSection({profile,today,streaks,badges}){
+  const[report,setReport]=useState(null),[loadingR,setLoadingR]=useState(false);
+  const[sug,setSug]=useState(null),[loadingS,setLoadingS]=useState(false);
+  const calLeft=Math.max(0,(profile.calGoal||2000)-today.cal);
+  const calPct=Math.min(100,Math.round((today.cal/(profile.calGoal||2000))*100));
+  const protPct=Math.min(100,Math.round((today.protein/(profile.proteinGoal||150))*100));
+  const watPct=Math.min(100,Math.round((today.water/(profile.waterGoal||8))*100));
+  const hour=new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : (hour < 17 ? "Good afternoon" : "Good evening");
+  const getReport=async()=>{setLoadingR(true);setReport(null);
+    try{const t=await ai(`User: goal=${profile.goal}, calGoal=${profile.calGoal}, proteinGoal=${profile.proteinGoal}. Today: cal=${today.cal}, protein=${today.protein}g, water=${today.water} glasses. Streaks: water=${streaks.water}, cal=${streaks.calories}. Return JSON:{"score":85,"scoreLabel":"Great day!","wins":["...","..."],"improvements":["..."],"tomorrowPlan":"...","motivationalQuote":"..."}`,"You are a personal health coach. Be specific and encouraging. Return only valid JSON.");setReport(JSON.parse(t));}
+    catch{setReport({score:75,scoreLabel:"Good progress!",wins:["Staying consistent"],improvements:["Drink more water"],tomorrowPlan:"Hit your protein goal",motivationalQuote:"Every step counts."});}setLoadingR(false);};
+  const getSug=async()=>{setLoadingS(true);setSug(null);
+    try{const t=await ai(`${calLeft} kcal remaining. Protein so far: ${today.protein}g, goal: ${profile.proteinGoal}g. Suggest 3 meals/snacks fitting remaining macros. Return JSON:{"suggestions":[{"name":"...","cal":0,"protein":0,"why":"..."},{"name":"...","cal":0,"protein":0,"why":"..."},{"name":"...","cal":0,"protein":0,"why":"..."}]}`,"You are a nutrition expert. Return only valid JSON.");setSug(JSON.parse(t));}
+    catch{setSug({suggestions:[{name:"Greek yogurt + berries",cal:180,protein:15,why:"High protein, low cal"},{name:"Tuna wrap",cal:350,protein:30,why:"Great protein boost"},{name:"Cottage cheese",cal:120,protein:14,why:"Easy and filling"}]});}setLoadingS(false);};
+  const BADGES=[{id:"first_scan",icon:"📷",name:"First Scan"},{id:"streak3",icon:"🔥",name:"On Fire"},{id:"streak7",icon:"⚡",name:"Week Warrior"},{id:"water_goal",icon:"💧",name:"Hydrated"},{id:"protein_goal",icon:"💪",name:"Protein Pro"},{id:"weight_log",icon:"⚖️",name:"Tracked"},{id:"workout_done",icon:"🏋️",name:"Crushed It"},{id:"meal_log5",icon:"🥗",name:"Food Diary"}];
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <Card style={{background:`linear-gradient(135deg,${T.accentDim},${T.surface})`,border:`1px solid ${T.accent}33`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:22,color:T.text}}>{greet}{profile.name?`, ${profile.name}`:""}! 👋</div>
+            <div style={{color:T.textMuted,fontSize:13,marginTop:4}}>{new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</div>
+          </div>
+          <Hint title="Home Dashboard" icon="🏠" color={T.accent}>Your daily summary. All numbers reset at midnight. Tap any tab at the bottom to track food, workouts, water or weight.</Hint>
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:16,flexWrap:"wrap"}}>
+          {[{l:"Calories",v:today.cal,g:profile.calGoal||2000,u:"kcal",c:T.accent},{l:"Protein",v:today.protein,g:profile.proteinGoal||150,u:"g",c:T.cyan},{l:"Water",v:today.water,g:profile.waterGoal||8,u:"gl",c:T.accent}].map(m=>(
+            <div key={m.l} style={{flex:1,minWidth:90,background:`${m.c}15`,borderRadius:12,padding:"12px 14px"}}>
+              <div style={{fontSize:22,fontWeight:800,color:m.c}}>{m.v}<span style={{fontSize:11,color:T.textMuted}}>/{m.g}{m.u}</span></div>
+              <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>{m.l}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      {/* Rings */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+        {[{l:"Calories",pct:calPct,c:T.accent},{l:"Protein",pct:protPct,c:T.cyan},{l:"Hydration",pct:watPct,c:T.accent}].map(m=>(
+          <Card key={m.l} style={{textAlign:"center",padding:"14px 8px"}}>
+            <div style={{display:"flex",justifyContent:"center"}}><Ring pct={m.pct} color={m.c} size={70}/></div>
+            <div style={{marginTop:6,fontSize:16,fontWeight:800,color:T.text}}>{m.pct}%</div>
+            <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{m.l}</div>
+          </Card>
+        ))}
+      </div>
+      {/* Streaks */}
+      <div style={{display:"flex",gap:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",width:"100%",marginBottom:8}}>
+          <div style={{fontWeight:700,color:T.textMuted,fontSize:11,letterSpacing:1.2}}>🔥 STREAKS</div>
+          <Hint title="Streaks" icon="🔥" color={T.amber}>A streak counts how many days in a row you hit your goal. Log water, calories and workouts every day to keep your streaks alive!</Hint>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:10}}>
+        {[{icon:"💧",l:"Water",v:streaks.water,c:T.accent},{icon:"🥗",l:"Calories",v:streaks.calories,c:T.cyan},{icon:"💪",l:"Workout",v:streaks.workout,c:T.purple}].map(s=>(
+          <div key={s.l} style={{flex:1,background:T.surface,border:`1px solid ${T.border}`,borderRadius:14,padding:"14px 10px",textAlign:"center"}}>
+            <div style={{fontSize:24}}>{s.icon}</div>
+            <div style={{fontSize:22,fontWeight:800,color:s.c,marginTop:4}}>{s.v}<span style={{fontSize:14}}>🔥</span></div>
+            <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+      {/* What can I eat */}
+      <Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sug?14:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontWeight:700,color:T.cyan,fontSize:13,letterSpacing:1}}>🍽️ WHAT CAN I EAT?</div>
+            <Hint title="Meal Suggestions" icon="🍽️" color={T.cyan}>Based on your remaining calories and protein for today, AI suggests 3 specific meals or snacks that fit perfectly into your macros.</Hint>
+          </div>
+          <Btn onClick={getSug} disabled={loadingS} small color={T.cyan}>{loadingS?"…":`${calLeft} kcal left`}</Btn>
+        </div>
+        {loadingS&&<div style={{color:T.textMuted,fontSize:13,paddingTop:10}}>Finding meals for your macros…</div>}
+        {sug&&sug.suggestions?.map((s,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px",background:T.surfaceHigh,borderRadius:12,marginBottom:8}}>
+            <div><div style={{fontWeight:700,color:T.text,fontSize:14}}>{s.name}</div><div style={{color:T.textMuted,fontSize:12,marginTop:2}}>💡 {s.why}</div></div>
+            <div style={{textAlign:"right",flexShrink:0,marginLeft:10}}><div style={{color:T.accent,fontWeight:800}}>{s.cal}kcal</div><div style={{color:T.cyan,fontSize:12}}>{s.protein}g P</div></div>
+          </div>
+        ))}
+      </Card>
+      {/* AI Report */}
+      <Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:report?14:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontWeight:700,color:T.accent,fontSize:13,letterSpacing:1}}>✦ AI DAILY REPORT</div>
+            <Hint title="AI Daily Report" icon="✦" color={T.accent}>AI analyzes everything you did today — food, water, workouts — and gives you a health score, highlights your wins, suggests improvements, and plans tomorrow's focus.</Hint>
+          </div>
+          <Btn onClick={getReport} disabled={loadingR} small>{loadingR?"…":"Generate"}</Btn>
+        </div>
+        {loadingR&&<div style={{color:T.textMuted,fontSize:13,paddingTop:10}}>Analyzing your day…</div>}
+        {report&&<>
+          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14,padding:"14px",background:T.accentGlow,borderRadius:12}}>
+            <div style={{fontSize:48,fontWeight:900,color:T.accent,lineHeight:1}}>{report.score}</div>
+            <div><div style={{fontWeight:800,color:T.text,fontSize:18}}>{report.scoreLabel}</div><div style={{color:T.textMuted,fontSize:13}}>Today's health score</div></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+            <div style={{background:`${T.green}10`,borderRadius:12,padding:"12px"}}><div style={{fontWeight:700,color:T.green,fontSize:11,marginBottom:8}}>✓ WINS</div>{report.wins?.map((w,i)=><div key={i} style={{color:T.textMuted,fontSize:13,marginBottom:4}}>• {w}</div>)}</div>
+            <div style={{background:`${T.amber}10`,borderRadius:12,padding:"12px"}}><div style={{fontWeight:700,color:T.amber,fontSize:11,marginBottom:8}}>↑ IMPROVE</div>{report.improvements?.map((w,i)=><div key={i} style={{color:T.textMuted,fontSize:13,marginBottom:4}}>• {w}</div>)}</div>
+          </div>
+          {report.tomorrowPlan&&<div style={{padding:"12px",background:`${T.accent}10`,borderRadius:10,marginBottom:10}}><div style={{fontWeight:700,color:T.accent,fontSize:11,marginBottom:4}}>📅 TOMORROW</div><div style={{color:T.textMuted,fontSize:13}}>{report.tomorrowPlan}</div></div>}
+          {report.motivationalQuote&&<div style={{fontStyle:"italic",color:T.textMuted,fontSize:13,textAlign:"center",padding:"8px 0"}}>"{report.motivationalQuote}"</div>}
+        </>}
+      </Card>
+      {/* Badges */}
+      <div>
+        <SectionLabel>🏆 ACHIEVEMENTS</SectionLabel>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {BADGES.map(b=>(
+            <div key={b.id} style={{background:badges[b.id]?T.surface:T.surfaceHigh,border:`1px solid ${badges[b.id]?T.accent:T.border}`,borderRadius:14,padding:"14px 8px",textAlign:"center",opacity:badges[b.id]?1:0.4,transition:"all 0.3s"}}>
+              <div style={{fontSize:26}}>{b.icon}</div>
+              <div style={{fontSize:11,fontWeight:700,color:badges[b.id]?T.text:T.textMuted,marginTop:6}}>{b.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Nutrition Section ─────────────────────────────────────────────────────────
+function NutritionSection({meals,onAdd,profile,onBadge}){
+  const[mode,setMode]=useState("search"),[textInput,setTextInput]=useState(""),[busy,setBusy]=useState(false);
+  const[aiResult,setAiResult]=useState(null),[showBarcode,setShowBarcode]=useState(false),[showPhoto,setShowPhoto]=useState(false);
+  const[scanned,setScanned]=useState(null),[scanType,setScanType]=useState("barcode"),[scanErr,setScanErr]=useState("");
+  const[templates,setTemplates]=useState(store.get("templates")||[]);
+  const totals=meals.reduce((a,m)=>({cal:a.cal+m.cal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{cal:0,protein:0,carbs:0,fat:0});
+  const calLeft=Math.max(0,(profile.calGoal||2000)-totals.cal);
+  const macroScore=Math.round((Math.min(totals.cal,profile.calGoal||2000)/(profile.calGoal||2000)*40)+(Math.min(totals.protein,profile.proteinGoal||150)/(profile.proteinGoal||150)*40)+((totals.fat<(profile.calGoal||2000)*0.35/9)?20:0));
+  const analyzeText=async()=>{if(!textInput.trim())return;setBusy(true);setAiResult(null);
+    try{const t=await ai(`Analyze meal:"${textInput}". Return JSON:{"name":"...","cal":0,"protein":0,"carbs":0,"fat":0,"fiber":0,"insight":"one health tip"}`);setAiResult(JSON.parse(t));}
+    catch{setAiResult({name:textInput,cal:400,protein:20,carbs:45,fat:15,fiber:3,insight:"Balanced meal."});}setBusy(false);};
+  const handleBarcode=async(bc)=>{setShowBarcode(false);setBusy(true);setScanErr("");setScanned(null);setScanType("barcode");
+    const r=await lookupBarcode(bc);if(r.found){setScanned(r);setMode("scan");onBadge("first_scan");}else{setScanErr(`Not found: ${bc}. Try Photo Scan!`);setMode("text");}setBusy(false);};
+  const handlePhoto=async(r)=>{setShowPhoto(false);store.set(`food:n:${(r.name||"").toLowerCase().replace(/\s+/g,"-")}`,{...r,source:"ai-photo",savedAt:Date.now()});
+    setScanned({...r,source:"ai-photo",serving:r.serving||"1 serving",perServing:{cal:r.perServing?.cal||0,protein:r.perServing?.protein||0,carbs:r.perServing?.carbs||0,fat:r.perServing?.fat||0,fiber:r.perServing?.fiber||0,sugar:r.perServing?.sugar||0,sodium:r.perServing?.sodium||0}});
+    setScanType("photo");setMode("scan");onBadge("first_scan");};
+  const saveTemplate=()=>{if(!aiResult)return;const t=[...templates,{...aiResult,id:Date.now()}];setTemplates(t);store.set("templates",t);};
+  const addMeal=(m)=>{onAdd(m);if(meals.length>=4)onBadge("meal_log5");};
+  const MODES=[{id:"search",l:"🔍 Search"},{id:"text",l:"✏️ AI"},{id:"barcode",l:"📷 Scan"},{id:"photo",l:"📸 Photo"}];
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      {showBarcode&&<BarcodeScanner onResult={handleBarcode} onClose={()=>setShowBarcode(false)}/>}
+      {showPhoto&&<PhotoScanner onResult={handlePhoto} onClose={()=>setShowPhoto(false)}/>}
+      {/* Macro rings */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+        {[{l:"Calories",v:totals.cal,g:profile.calGoal||2000,c:T.accent,u:"kcal"},{l:"Protein",v:totals.protein,g:profile.proteinGoal||150,c:T.cyan,u:"g"},{l:"Carbs",v:totals.carbs,g:250,c:T.amber,u:"g"},{l:"Fat",v:totals.fat,g:65,c:T.red,u:"g"}].map(m=>(
+          <Card key={m.l} style={{textAlign:"center",padding:"12px 6px"}}>
+            <div style={{display:"flex",justifyContent:"center"}}><Ring pct={Math.min(100,(m.v/m.g)*100)} color={m.c} size={60}/></div>
+            <div style={{marginTop:6,fontSize:14,fontWeight:800,color:T.text}}>{m.v}<span style={{fontSize:9,color:T.textMuted}}>{m.u}</span></div>
+            <div style={{fontSize:10,color:T.textMuted}}>{m.l}</div>
+          </Card>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <Card style={{padding:"12px 14px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{fontSize:10,color:T.textMuted,fontWeight:700,letterSpacing:1}}>MACRO SCORE</div>
+            <Hint title="Macro Score" icon="📊" color={T.accent}>A score out of 100 based on how close you are to your calorie, protein and fat goals today. Above 70 is great, above 40 is good progress!</Hint>
+          </div>
+          <div style={{fontSize:30,fontWeight:900,color:macroScore>70?T.green:macroScore>40?T.amber:T.red,marginTop:4}}>{macroScore}<span style={{fontSize:13,color:T.textMuted}}>/100</span></div>
+        </Card>
+        <Card style={{padding:"12px 14px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{fontSize:10,color:T.textMuted,fontWeight:700,letterSpacing:1}}>REMAINING</div>
+            <Hint title="Calories Remaining" icon="🔥" color={T.accent}>How many more calories you can eat today before reaching your daily goal. Try to end the day close to zero.</Hint>
+          </div>
+          <div style={{fontSize:30,fontWeight:900,color:T.accent,marginTop:4}}>{calLeft}<span style={{fontSize:13,color:T.textMuted}}>kcal</span></div>
+        </Card>
+      </div>
+      {/* Mode tabs */}
+      <Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{display:"flex",gap:8,overflowX:"auto",flex:1}}>
+            {MODES.map(b=><button key={b.id} onClick={()=>{if(b.id==="barcode")setShowBarcode(true);else if(b.id==="photo")setShowPhoto(true);else{setMode(b.id);setScanned(null);setAiResult(null);}}}
+              style={{background:mode===b.id&&b.id!=="barcode"&&b.id!=="photo"?T.accent:"transparent",color:mode===b.id&&b.id!=="barcode"&&b.id!=="photo"?"#080d14":T.textMuted,border:`1px solid ${T.border}`,borderRadius:20,padding:"8px 14px",fontSize:13,fontWeight:700,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap",flexShrink:0}}>{b.l}</button>)}
+          </div>
+          <Hint title="How to Add Food" icon="🥗" color={T.accent} style={{marginLeft:8,flexShrink:0}}>
+            {"🔍 Search DB — search 300,000+ foods by name\n✏️ AI — describe any meal in plain words\n📷 Barcode — scan the barcode on any package\n📸 Photo — take a photo of the package or nutrition label"}
+          </Hint>
+        </div>
+        {busy&&<div style={{textAlign:"center",padding:"20px 0",color:T.textMuted}}><div style={{fontSize:28,marginBottom:8}}>🔍</div>Looking up…</div>}
+        {scanErr&&!busy&&<div style={{padding:"12px",background:`${T.red}15`,border:`1px solid ${T.red}44`,borderRadius:10,color:T.red,fontSize:14,marginBottom:12}}>{scanErr}</div>}
+        {mode==="search"&&!scanned&&<FoodSearch onAdd={addMeal} profile={profile}/>}
+        {mode==="text"&&!busy&&!scanned&&<div style={{display:"flex",gap:10}}>
+          <Input value={textInput} onChange={e=>setTextInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&analyzeText()} placeholder="Describe your meal…"/>
+          <Btn onClick={analyzeText} style={{flexShrink:0}}>Go</Btn>
+        </div>}
+        {aiResult&&mode==="text"&&<div style={{marginTop:14,padding:"14px",background:T.accentGlow,borderRadius:12,border:`1px solid ${T.accentDim}`}}>
+          <div style={{fontWeight:700,color:T.text,fontSize:15,marginBottom:8}}>{aiResult.name}</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}><Tag color={T.accent}>{aiResult.cal}kcal</Tag><Tag color={T.cyan}>{aiResult.protein}g P</Tag><Tag color={T.amber}>{aiResult.carbs}g C</Tag><Tag color={T.red}>{aiResult.fat}g F</Tag></div>
+          {aiResult.insight&&<div style={{fontSize:13,color:T.textMuted,fontStyle:"italic",marginBottom:12}}>💡 {aiResult.insight}</div>}
+          <div style={{display:"flex",gap:8}}>
+            <Btn onClick={()=>{addMeal(aiResult);setAiResult(null);setTextInput("");}} style={{flex:1}}>Add to Log</Btn>
+            <OutlineBtn onClick={saveTemplate}>⭐</OutlineBtn>
+          </div>
+        </div>}
+        {scanned&&!busy&&<ProductCard product={scanned} scanType={scanType} onAdd={(m)=>{addMeal(m);setScanned(null);setMode("search");}} onRescan={()=>{setScanned(null);scanType==="photo"?setShowPhoto(true):setShowBarcode(true);}}/>}
+      </Card>
+      {/* Templates */}
+      {templates.length>0&&<Card><SectionLabel>⭐ QUICK LOG</SectionLabel>
+        {templates.map(t=>(
+          <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px",background:T.surfaceHigh,borderRadius:12,marginBottom:8}}>
+            <div><div style={{fontWeight:600,color:T.text,fontSize:14}}>{t.name}</div><div style={{fontSize:12,color:T.textMuted,marginTop:2}}>{t.cal}kcal · {t.protein}g P</div></div>
+            <div style={{display:"flex",gap:8}}>
+              <Btn onClick={()=>addMeal(t)} small>+ Log</Btn>
+              <OutlineBtn onClick={()=>{const nt=templates.filter(x=>x.id!==t.id);setTemplates(nt);store.set("templates",nt);}} color={T.red} small>✕</OutlineBtn>
+            </div>
+          </div>
+        ))}
+      </Card>}
+      {/* Log */}
+      {meals.length>0&&<Card><SectionLabel>TODAY'S LOG</SectionLabel>
+        {meals.map((m,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:i<meals.length-1?`1px solid ${T.border}`:"none"}}>
+            <span style={{color:T.text,fontWeight:600,fontSize:14,flex:1,marginRight:10,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.name}</span>
+            <div style={{display:"flex",gap:6,flexShrink:0}}><Tag color={T.accent}>{m.cal}kcal</Tag><Tag color={T.cyan}>{m.protein}g P</Tag></div>
+          </div>
+        ))}
+      </Card>}
+    </div>
+  );
+}
+
+// ── Workout Section ───────────────────────────────────────────────────────────
+function WorkoutSection({onBadge,onWorkoutDone}){
+  const[goal,setGoal]=useState(""),[plan,setPlan]=useState(null),[busy,setBusy]=useState(false);
+  const[sets,setSets]=useState({}),[restTimer,setRestTimer]=useState(null),[restSecs,setRestSecs]=useState(0);
+  const[history,setHistory]=useState(store.get("workout-history")||[]);
+  const timerRef=useRef(null);
+  const generate=async()=>{if(!goal.trim())return;setBusy(true);setPlan(null);setSets({});
+    try{const t=await ai(`Workout for:"${goal}". Return JSON:{"title":"...","duration":"...","exercises":[{"name":"...","sets":3,"reps":"...","rest":60,"tip":"...","targetMuscle":"..."}]}`,"You are an expert trainer. Return only valid JSON.");setPlan(JSON.parse(t));}
+    catch{setPlan({title:"Full Body",duration:"45 min",exercises:[{name:"Push-ups",sets:3,reps:"15",rest:60,tip:"Keep core tight",targetMuscle:"Chest"},{name:"Squats",sets:4,reps:"12",rest:90,tip:"Drive through heels",targetMuscle:"Legs"},{name:"Plank",sets:3,reps:"45s",rest:45,tip:"Neutral spine",targetMuscle:"Core"}]});}setBusy(false);};
+  const startRest=(secs)=>{clearInterval(timerRef.current);setRestSecs(secs);setRestTimer(secs);timerRef.current=setInterval(()=>setRestTimer(r=>{if(r<=1){clearInterval(timerRef.current);setRestTimer(null);return 0;}return r-1;}),1000);};
+  useEffect(()=>()=>clearInterval(timerRef.current),[]);
+  const toggleSet=(ei,si,rest)=>{const k=`${ei}-${si}`;const was=sets[k];setSets(p=>({...p,[k]:!p[k]}));if(!was&&rest)startRest(rest);};
+  const finishWorkout=()=>{if(!plan)return;const e={title:plan.title,date:new Date().toLocaleDateString(),completedSets:Object.values(sets).filter(Boolean).length};const h=[e,...history].slice(0,20);setHistory(h);store.set("workout-history",h);onBadge("workout_done");onWorkoutDone();};
+  const allSets=plan?plan.exercises.reduce((a,ex)=>a+ex.sets,0):0;
+  const doneSets=Object.values(sets).filter(Boolean).length;
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      {restTimer!==null&&<div style={{position:"fixed",bottom:"calc(90px + env(safe-area-inset-bottom))",right:16,zIndex:50,background:T.surface,border:`2px solid ${T.accent}`,borderRadius:20,padding:"16px 20px",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.6)"}}>
+        <div style={{fontSize:11,color:T.textMuted,letterSpacing:1,marginBottom:4}}>REST</div>
+        <div style={{fontSize:44,fontWeight:900,color:T.accent,lineHeight:1}}>{restTimer}s</div>
+        <div style={{background:T.accentDim,borderRadius:4,height:4,marginTop:8}}><div style={{height:"100%",background:T.accent,borderRadius:4,transition:"width 0.9s linear",width:`${(restTimer/restSecs)*100}%`}}/></div>
+        <button onClick={()=>{clearInterval(timerRef.current);setRestTimer(null);}} style={{marginTop:10,background:"transparent",border:`1px solid ${T.border}`,color:T.textMuted,borderRadius:8,padding:"6px 16px",cursor:"pointer",fontSize:13,fontWeight:600,width:"100%"}}>Skip</button>
+      </div>}
+      <Card>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+          <div style={{fontWeight:700,color:T.accent,fontSize:13,letterSpacing:1}}>AI WORKOUT GENERATOR</div>
+          <Hint title="AI Workout Generator" icon="💪" color={T.accent}>Type your fitness goal in plain words — for example "build chest and shoulders", "30 min cardio for beginners", or "leg day". AI creates a full workout plan with sets, reps, rest times and coaching tips.</Hint>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <Input value={goal} onChange={e=>setGoal(e.target.value)} onKeyDown={e=>e.key==="Enter"&&generate()} placeholder="e.g. build shoulders, 30min cardio"/>
+          <Btn onClick={generate} disabled={busy} style={{flexShrink:0}}>{busy?"…":"Go"}</Btn>
+        </div>
+      </Card>
+      {plan&&<Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div><div style={{fontWeight:800,color:T.text,fontSize:18}}>{plan.title}</div><div style={{color:T.textMuted,fontSize:13}}>⏱ {plan.duration}</div></div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{textAlign:"right"}}><div style={{fontWeight:800,color:T.accent,fontSize:18}}>{doneSets}/{allSets}</div><div style={{fontSize:11,color:T.textMuted}}>sets done</div></div>
+            <Hint title="How to Use" icon="💪" color={T.accent}>Tap the numbered buttons (1, 2, 3…) to mark each set as done. A rest timer appears automatically between sets. When all sets are done, tap Finish Workout to save it to your history.</Hint>
+          </div>
+        </div>
+        <div style={{background:T.surfaceHigh,borderRadius:100,height:6,marginBottom:16}}><div style={{height:"100%",background:T.accent,borderRadius:100,transition:"width 0.5s",width:`${allSets?doneSets/allSets*100:0}%`,boxShadow:`0 0 8px ${T.accent}66`}}/></div>
+        {plan.exercises?.map((ex,ei)=>{const done=Array.from({length:ex.sets},(_,si)=>sets[`${ei}-${si}`]).filter(Boolean).length;return(
+          <div key={ei} style={{padding:"14px",background:T.surfaceHigh,borderRadius:14,border:`1px solid ${done===ex.sets?T.accent:T.border}`,marginBottom:12,transition:"border 0.3s"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div><span style={{fontWeight:700,color:T.text,fontSize:15}}>{ex.name}</span>{ex.targetMuscle&&<span style={{marginLeft:8,fontSize:12,color:T.textMuted}}>· {ex.targetMuscle}</span>}</div>
+              <span style={{fontSize:12,color:T.textMuted}}>{done}/{ex.sets} · {ex.reps}</span>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+              {Array.from({length:ex.sets},(_,si)=>(
+                <button key={si} onClick={()=>toggleSet(ei,si,ex.rest)}
+                  style={{width:44,height:44,borderRadius:10,background:sets[`${ei}-${si}`]?T.accent:T.surface,color:sets[`${ei}-${si}`]?"#080d14":T.textMuted,border:`1px solid ${sets[`${ei}-${si}`]?T.accent:T.border}`,cursor:"pointer",fontWeight:700,fontSize:15,transition:"all 0.2s"}}>
+                  {si+1}
+                </button>
+              ))}
+              <div style={{display:"flex",alignItems:"center",gap:6,marginLeft:"auto"}}>
+                <span style={{fontSize:12,color:T.textMuted}}>⏱ {ex.rest}s rest</span>
+              </div>
+            </div>
+            <div style={{fontSize:13,color:T.textMuted,fontStyle:"italic"}}>💡 {ex.tip}</div>
+          </div>
+        );})}
+        {doneSets>0&&<Btn onClick={finishWorkout} style={{width:"100%",background:T.green}}>✓ Finish Workout</Btn>}
+      </Card>}
+      {history.length>0&&<Card><SectionLabel>📜 HISTORY</SectionLabel>
+        {history.slice(0,5).map((h,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:i<Math.min(history.length,5)-1?`1px solid ${T.border}`:"none"}}>
+            <div><div style={{fontWeight:600,color:T.text,fontSize:14}}>{h.title}</div><div style={{color:T.textMuted,fontSize:12}}>{h.date}</div></div>
+            <Tag color={T.accent}>{h.completedSets} sets</Tag>
+          </div>
+        ))}
+      </Card>}
+    </div>
+  );
+}
+
+// ── Water Section ─────────────────────────────────────────────────────────────
+function WaterSection({water,onAdd,profile,onBadge}){
+  const goal=profile.waterGoal||8,pct=Math.min(100,(water/goal)*100);
+  const[log,setLog]=useState(store.get(`wlog-${TODAY}`)||[]);
+  const addWater=n=>{const e={n,t:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};const nl=[...log,e];setLog(nl);store.set(`wlog-${TODAY}`,nl);onAdd(n);if(water+n>=goal)onBadge("water_goal");};
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <Card style={{textAlign:"center"}}>
+        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
+          <Hint title="Water Tracking" icon="💧" color={T.accent}>Tap the buttons to add glasses of water. Your goal is {goal} glasses per day — set from your profile. Staying hydrated improves energy, focus and metabolism. The log resets every day.</Hint>
+        </div>
+        <div style={{fontWeight:900,color:T.text,fontSize:52,lineHeight:1}}>{water}<span style={{fontSize:22,color:T.textMuted,fontWeight:400}}>/{goal}</span></div>
+        <div style={{color:T.textMuted,fontSize:14,marginTop:4,marginBottom:16}}>glasses today</div>
+        <div style={{background:T.surfaceHigh,borderRadius:100,height:14,overflow:"hidden",marginBottom:16}}>
+          <div style={{width:`${pct}%`,height:"100%",background:`linear-gradient(90deg,${T.accentDim},${T.accent})`,borderRadius:100,transition:"width 0.5s",boxShadow:`0 0 12px ${T.accent}66`}}/>
+        </div>
+        {water>=goal&&<div style={{color:T.green,fontSize:16,fontWeight:700,marginBottom:16}}>🎉 Goal reached!</div>}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {[1,2,3,4].map(n=><Btn key={n} onClick={()=>addWater(n)} style={{padding:"14px 0",fontSize:16}}>+{n} 💧</Btn>)}
+        </div>
+      </Card>
+      {log.length>0&&<Card><SectionLabel>TODAY'S LOG</SectionLabel>
+        {log.map((e,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:i<log.length-1?`1px solid ${T.border}`:"none"}}><span style={{color:T.text,fontSize:14}}>+{e.n} glass{e.n>1?"es":""}</span><span style={{color:T.textMuted,fontSize:13}}>{e.t}</span></div>)}
+      </Card>}
+    </div>
+  );
+}
+
+// ── Weight Section ────────────────────────────────────────────────────────────
+function WeightSection({weights,onLog,onBadge}){
+  const[val,setVal]=useState(""),[insight,setInsight]=useState(""),[busy,setBusy]=useState(false),[view,setView]=useState("week");
+  const cur=weights[weights.length-1]?.kg,prev=weights[weights.length-2]?.kg;
+  const delta=cur&&prev?(cur-prev).toFixed(1):null;
+  const totalLoss=weights[0]?.kg&&cur?(weights[0].kg-cur).toFixed(1):null;
+  const logW=()=>{if(!val)return;onLog(parseFloat(val));setVal("");onBadge("weight_log");};
+  const getInsight=async()=>{if(weights.length<2)return;setBusy(true);const t=await ai(`Weight readings (kg): ${weights.slice(-7).map(w=>w.kg).join(", ")}. Give 2 sentences of analysis and one actionable tip.`,"You are a supportive fitness coach. Return plain text, not JSON.");setInsight(t);setBusy(false);};
+  const data=weights.slice(view==="week"?-7:-30);const min=Math.min(...data.map(w=>w.kg)),max=Math.max(...data.map(w=>w.kg));
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        <Card style={{textAlign:"center",padding:"14px 10px"}}><div style={{color:T.textMuted,fontSize:10,letterSpacing:1}}>CURRENT</div><div style={{fontSize:30,fontWeight:900,color:T.text,marginTop:4}}>{cur??"-"}<span style={{fontSize:12,color:T.textMuted}}>kg</span></div>{delta&&<div style={{fontSize:13,color:parseFloat(delta)<0?T.green:T.red,marginTop:4,fontWeight:700}}>{delta>0?"+":""}{delta}kg</div>}</Card>
+        <Card style={{textAlign:"center",padding:"14px 10px"}}><div style={{color:T.textMuted,fontSize:10,letterSpacing:1}}>TOTAL</div><div style={{fontSize:30,fontWeight:900,color:totalLoss>0?T.green:T.red,marginTop:4}}>{totalLoss?`-${totalLoss}`:"-"}<span style={{fontSize:12,color:T.textMuted}}>kg</span></div><div style={{fontSize:11,color:T.textMuted,marginTop:4}}>since start</div></Card>
+        <Card style={{textAlign:"center",padding:"14px 10px"}}>
+          <div style={{display:"flex",justifyContent:"flex-end"}}><Hint title="Log Your Weight" icon="⚖️" color={T.accent}>Weigh yourself at the same time each day (morning is best, before eating). Enter your weight in kg and tap Log. Track consistently for accurate trends.</Hint></div>
+          <div style={{color:T.textMuted,fontSize:10,letterSpacing:1}}>LOG</div>
+          <input value={val} onChange={e=>setVal(e.target.value)} placeholder="kg" type="number" style={{width:"90%",background:T.surfaceHigh,border:`1px solid ${T.border}`,borderRadius:8,padding:"6px 8px",color:T.text,fontSize:16,fontWeight:700,textAlign:"center",outline:"none",marginTop:6}}/>
+          <button onClick={logW} style={{marginTop:8,width:"90%",background:T.accent,color:"#080d14",border:"none",borderRadius:8,padding:"8px 0",fontWeight:700,cursor:"pointer",fontSize:14}}>Log</button>
+        </Card>
+      </div>
+      {weights.length>1&&<Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <SectionLabel style={{margin:0}}>WEIGHT TREND</SectionLabel>
+            <Hint title="Weight Chart" icon="📈" color={T.accent}>Each bar is a day. The brightest bar is your most recent weight. Switch between 7-day and 30-day view. Tap AI Insight for a personalized analysis of your trend and advice.</Hint>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            {["week","month"].map(v=><button key={v} onClick={()=>setView(v)} style={{background:view===v?T.accent:"transparent",color:view===v?"#080d14":T.textMuted,border:`1px solid ${view===v?T.accent:T.border}`,borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:600,cursor:"pointer"}}>{v==="week"?"7d":"30d"}</button>)}
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"flex-end",gap:4,height:90,marginBottom:14}}>
+          {data.map((w,i)=>{const h=max===min?45:((w.kg-min)/(max-min))*70+10;const last=i===data.length-1;return(
+            <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <div style={{width:"100%",height:h,background:last?T.accent:T.accentDim,borderRadius:"5px 5px 0 0",transition:"height 0.5s",position:"relative"}}>
+                {last&&<div style={{position:"absolute",top:-22,left:"50%",transform:"translateX(-50%)",fontSize:10,color:T.accent,fontWeight:700,whiteSpace:"nowrap"}}>{w.kg}</div>}
+              </div>
+              <span style={{fontSize:9,color:T.textMuted}}>{w.date?.slice(-2)||""}</span>
+            </div>
+          );})}
+        </div>
+        <button onClick={getInsight} disabled={busy} style={{background:T.accentGlow,border:`1px solid ${T.accent}`,color:T.accent,borderRadius:10,padding:"10px",fontWeight:700,cursor:"pointer",fontSize:14,width:"100%"}}>{busy?"Analyzing…":"✦ AI Insight"}</button>
+        {insight&&<div style={{marginTop:12,padding:"12px 14px",background:T.accentGlow,borderRadius:10,border:`1px solid ${T.accentDim}`,fontSize:13,color:T.textMuted,lineHeight:1.6}}>{insight}</div>}
+      </Card>}
+    </div>
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+// ── Language System ───────────────────────────────────────────────────────────
+const LANGS = {
+  en: {
+    flag:"🇬🇧", name:"English", dir:"ltr",
+    tagline:"Your AI Health Coach",
+    installTitle:"Install NUTRYX",
+    installSub:"Add to home screen for the full app experience",
+    installBtn:"Install",
+    iosHintHTML:"📲 Tap <b>Share</b> then <b>\"Add to Home Screen\"</b> to install NUTRYX",
+    gotIt:"Got it",
+    welcome:"Welcome! 👋",
+    onboarding_sub:"Let's personalize NUTRYX for you. Takes 30 seconds.",
+    continueBtn:"Continue →",
+    calculateBtn:"Calculate →",
+    startApp:"🚀 Start NUTRYX",
+    yourGoal:"Your goal 🎯",
+    activityLevel:"Activity level 🏃",
+    yourGoals:"Your goals ✨",
+    tour_step1_title:"Home Dashboard",
+    tour_step1_desc:"Your daily overview. See calories, protein, water at a glance. Get AI meal suggestions based on what you have left, and generate a full daily health report.",
+    tour_step2_title:"Nutrition Tab",
+    tour_step2_desc:"Log everything you eat. Use Search DB to find 300,000+ foods, scan a barcode, take a photo of any package, or describe a meal in plain text — AI does the rest.",
+    tour_step3_title:"Barcode Scanner",
+    tour_step3_desc:"Point your camera at any food barcode. Hold steady 15–20cm away, make sure it's well lit. The barcode number is found and nutrition info loads automatically.",
+    tour_step4_title:"Photo Scan",
+    tour_step4_desc:"Can't find a barcode? Take a photo of the front of the package or the nutrition label. AI reads the product name and all nutrition values automatically.",
+    tour_step5_title:"Workout Tab",
+    tour_step5_desc:"Describe your goal (e.g. 'build shoulders' or '30min cardio') and AI generates a full workout plan. Tap each set number to complete it — a rest timer starts automatically.",
+    tour_step6_title:"Water Tab",
+    tour_step6_desc:"Track how many glasses of water you drink. Tap +1, +2, +3 or +4 to log quickly. Your daily goal is set from your profile and resets every day.",
+    tour_step7_title:"Weight Tab",
+    tour_step7_desc:"Log your weight daily. See a chart of your progress over 7 or 30 days. Tap AI Insight for a personalized analysis of your weight trend.",
+    tour_step8_title:"Achievements",
+    tour_step8_desc:"Earn badges as you use NUTRYX — first scan, hitting your water goal, completing a workout, logging 5 meals in a day, and more. Check them on the Home tab.",
+    barcodeHint:"Point camera at barcode",
+    home:"Home", food:"Food", workout:"Workout", water:"Water", weight:"Weight",
+    today:"Today", kcal:"kcal",
+    streaks:"🔥 STREAKS", waterS:"Water", calS:"Calories", workoutS:"Workout",
+    whatEat:"🍽️ WHAT CAN I EAT?", kcalLeft:"kcal left", findingMeals:"Finding meals…",
+    aiReport:"✦ AI DAILY REPORT", generate:"Generate", analyzingDay:"Analyzing your day…",
+    todayScore:"Today's health score", wins:"✓ WINS", improve:"↑ IMPROVE", tmrw:"📅 TOMORROW",
+    achievements:"🏆 ACHIEVEMENTS",
+    macroScore:"MACRO SCORE", remaining:"REMAINING", addFood:"ADD FOOD",
+    searchTab:"🔍 Search", aiTab:"✏️ AI", barcodeTab:"📷 Barcode", photoTab:"📸 Photo",
+    mealPlaceholder:"Describe your meal… e.g. grilled chicken, rice",
+    addToLog:"Add to Log", quickLog:"⭐ QUICK LOG", todayLog:"TODAY'S LOG",
+    lookingUp:"Looking up…", savedDB:"✓ Saved to database!",
+    searchPlaceholder:"Search 300,000+ foods…", searching:"Searching…",
+    recentLogged:"🕐 RECENTLY LOGGED",
+    aiWorkout:"AI WORKOUT GENERATOR", workoutPlaceholder:"e.g. build shoulders, 30min cardio",
+    setsDone:"sets done", finishWorkout:"✓ Finish Workout", historyLabel:"📜 HISTORY",
+    glassesToday:"glasses today", goalReached:"🎉 Goal reached!", waterLogLabel:"TODAY'S LOG",
+    currentW:"CURRENT", totalW:"TOTAL", sinceStart:"since start", logW:"LOG", logBtn:"Log",
+    weightTrend:"WEIGHT TREND", analyzingW:"Analyzing…", aiInsight:"✦ AI Insight",
+    scanBarcode:"📷 Scan Barcode", closeBtn:"Close", manualEntry:"ENTER BARCODE MANUALLY",
+    barcodePH:"e.g. 8410076901033", lookUp:"Look Up",
+    startingCam:"Starting camera…", camUnavail:"Camera unavailable — use manual entry",
+    photoScanTitle:"📸 Photo Scan", takePhoto:"📷 Take Photo", uploadGallery:"🖼️ Upload from Gallery",
+    capture:"📸 Capture", retake:"← Retake", analyzeAI:"✨ Analyze with AI",
+    photoHint:"Point at the front of any package or nutrition label. AI reads everything.",
+    pointLabel:"Point at label or front", readingProd:"Reading product…",
+    notFood:"Couldn't identify food. Try a clearer photo.", analysisFailed:"Analysis failed. Try again.",
+    howManyG:"HOW MANY GRAMS DID YOU EAT?", nutritionFor:"NUTRITION FOR", packageServing:"📦 Package serving:",
+    per100g:"Values per 100g", addGLog:"Add {g}g to Log",
+    langTitle:"Choose Language",
+    tourSkip:"Skip tour", tourNext:"Next →", tourBack:"← Back", tourStart:"Let's go! 🚀",
+  },
+  de: {
+    flag:"🇩🇪", name:"Deutsch", dir:"ltr",
+    tagline:"Ihr KI-Gesundheitscoach",
+    installTitle:"NUTRYX installieren",
+    installSub:"Zum Startbildschirm hinzufügen für die vollständige App-Erfahrung",
+    installBtn:"Installieren",
+    iosHintHTML:"📲 Tippe auf <b>Teilen</b> und dann auf <b>„Zum Home-Bildschirm“</b>, um NUTRYX zu installieren",
+    gotIt:"Verstanden",
+    welcome:"Willkommen! 👋",
+    onboarding_sub:"Lassen Sie uns NUTRYX für Sie personalisieren. Dauert 30 Sekunden.",
+    continueBtn:"Weiter →",
+    calculateBtn:"Berechnen →",
+    startApp:"🚀 Starte NUTRYX",
+    yourGoal:"Dein Ziel 🎯",
+    activityLevel:"Aktivitätslevel 🏃",
+    yourGoals:"Deine Ziele ✨",
+    tour_step1_title:"Startseite",
+    tour_step1_desc:"Ihre tägliche Übersicht. Sehen Sie Kalorien, Protein und Wasser auf einen Blick. KI-Vorschläge für Mahlzeiten und ein täglicher Gesundheitsbericht.",
+    tour_step2_title:"Ernährungs-Tab",
+    tour_step2_desc:"Erfassen Sie alles, was Sie essen. Verwenden Sie die Suchdatenbank für 300.000+ Lebensmittel, scannen Sie Barcodes, fotografieren Sie Verpackungen oder beschreiben Sie eine Mahlzeit — die KI erledigt den Rest.",
+    tour_step3_title:"Barcode-Scanner",
+    tour_step3_desc:"Richten Sie die Kamera auf einen Barcode. Halten Sie 15–20cm Abstand und sorgen Sie für gute Beleuchtung. Die Nährwertdaten werden automatisch geladen.",
+    tour_step4_title:"Foto-Scan",
+    tour_step4_desc:"Kein Barcode? Fotografieren Sie die Front der Verpackung oder das Nährwertetikett. Die KI liest Namen und Nährwerte automatisch.",
+    tour_step5_title:"Trainings-Tab",
+    tour_step5_desc:"Beschreiben Sie Ihr Ziel (z. B. 'Schultern aufbauen' oder '30 Min Cardio') und die KI erstellt einen Trainingsplan mit Sätzen, Wiederholungen und Pausen.",
+    tour_step6_title:"Wasser-Tab",
+    tour_step6_desc:"Verfolgen Sie, wie viele Gläser Wasser Sie trinken. Tippen Sie +1, +2, +3 oder +4 zum schnellen Protokollieren. Ihr Tagesziel wird aus dem Profil gesetzt.",
+    tour_step7_title:"Gewichts-Tab",
+    tour_step7_desc:"Tägliches Gewicht protokollieren. Diagramme über 7 oder 30 Tage. Tippen Sie auf KI-Analyse für persönliche Einsichten.",
+    tour_step8_title:"Erfolge",
+    tour_step8_desc:"Verdienen Sie Abzeichen — erster Scan, Wasserziel erreichen, Training abschließen, 5 Mahlzeiten an einem Tag protokollieren und mehr.",
+    barcodeHint:"Richten Sie die Kamera auf einen Barcode",
+    home:"Start", food:"Essen", workout:"Training", water:"Wasser", weight:"Gewicht",
+    today:"Heute", kcal:"kcal",
+    streaks:"🔥 SERIEN", waterS:"Wasser", calS:"Kalorien", workoutS:"Training",
+    whatEat:"🍽️ WAS KANN ICH ESSEN?", kcalLeft:"kcal übrig", findingMeals:"Suche Mahlzeiten…",
+    aiReport:"✦ KI TAGESBERICHT", generate:"Erstellen", analyzingDay:"Analysiere deinen Tag…",
+    todayScore:"Heutiger Gesundheitsscore", wins:"✓ ERFOLGE", improve:"↑ VERBESSERN", tmrw:"📅 MORGEN",
+    achievements:"🏆 ERFOLGE",
+    macroScore:"MAKRO-SCORE", remaining:"ÜBRIG", addFood:"ESSEN HINZUFÜGEN",
+    searchTab:"🔍 Suche", aiTab:"✏️ KI", barcodeTab:"📷 Barcode", photoTab:"📸 Foto",
+    mealPlaceholder:"Mahlzeit beschreiben… z.B. Hähnchen, Reis",
+    addToLog:"Ins Tagebuch", quickLog:"⭐ SCHNELL ERFASSEN", todayLog:"HEUTIGES TAGEBUCH",
+    lookingUp:"Suche…", savedDB:"✓ In Datenbank gespeichert!",
+    searchPlaceholder:"300.000+ Lebensmittel suchen…", searching:"Suche…",
+    recentLogged:"🕐 ZULETZT ERFASST",
+    aiWorkout:"KI TRAININGSPLAN", workoutPlaceholder:"z.B. Schultern, 30 Min Cardio",
+    setsDone:"Sätze erledigt", finishWorkout:"✓ Training beenden", historyLabel:"📜 VERLAUF",
+    glassesToday:"Gläser heute", goalReached:"🎉 Ziel erreicht!", waterLogLabel:"HEUTIGES PROTOKOLL",
+    currentW:"AKTUELL", totalW:"GESAMT", sinceStart:"seit Beginn", logW:"ERFASSEN", logBtn:"Erfassen",
+    weightTrend:"GEWICHTSVERLAUF", analyzingW:"Analysiere…", aiInsight:"✦ KI-Analyse",
+    scanBarcode:"📷 Barcode scannen", closeBtn:"Schließen", manualEntry:"BARCODE MANUELL EINGEBEN",
+    barcodePH:"z.B. 8410076901033", lookUp:"Suchen",
+    startingCam:"Kamera startet…", camUnavail:"Kamera nicht verfügbar — manuelle Eingabe",
+    photoScanTitle:"📸 Foto-Scan", takePhoto:"📷 Foto aufnehmen", uploadGallery:"🖼️ Aus Galerie",
+    capture:"📸 Aufnehmen", retake:"← Wiederholen", analyzeAI:"✨ Mit KI analysieren",
+    photoHint:"Kamera auf Verpackung oder Nährwerttabelle richten. KI liest alles.",
+    pointLabel:"Auf Etikett richten", readingProd:"Produkt wird gelesen…",
+    notFood:"Lebensmittel nicht erkannt. Klareres Foto versuchen.", analysisFailed:"Analyse fehlgeschlagen.",
+    howManyG:"WIE VIELE GRAMM HAST DU GEGESSEN?", nutritionFor:"NÄHRWERTE FÜR", packageServing:"📦 Packungsportion:",
+    per100g:"Werte pro 100g", addGLog:"{g}g hinzufügen",
+    langTitle:"Sprache wählen",
+    tourSkip:"Tour überspringen", tourNext:"Weiter →", tourBack:"← Zurück", tourStart:"Los geht's! 🚀",
+  },
+  ar: {
+    flag:"🇸🇦", name:"العربية", dir:"rtl",
+    tagline:"مدرب الصحة الذكي",
+    installTitle:"تثبيت NUTRYX",
+    installSub:"أضف إلى الشاشة الرئيسية للحصول على تجربة التطبيق الكاملة",
+    installBtn:"تثبيت",
+    iosHintHTML:"📲 اضغط <b>مشاركة</b> ثم <b>\"إضافة إلى الشاشة الرئيسية\"</b> لتثبيت NUTRYX",
+    gotIt:"حسناً",
+    welcome:"مرحبًا! 👋",
+    onboarding_sub:"لنجعل NUTRYX مخصصًا لك. يستغرق 30 ثانية.",
+    continueBtn:"متابعة →",
+    calculateBtn:"احسب →",
+    startApp:"🚀 ابدأ NUTRYX",
+    yourGoal:"هدفك 🎯",
+    activityLevel:"مستوى النشاط 🏃",
+    yourGoals:"أهدافك ✨",
+    tour_step1_title:"لوحة التحكم",
+    tour_step1_desc:"نظرة عامة يومية. شاهد السعرات والبروتين والماء بسرعة. احصل على اقتراحات وجبات من الذكاء الاصطناعي وتقرير صحي يومي.",
+    tour_step2_title:"تبويب التغذية",
+    tour_step2_desc:"سجل كل ما تأكله. استخدم قاعدة البحث للعثور على أكثر من 300,000 طعام، امسح الباركود، التقط صورة للعبوة، أو وصف الوجبة نصيًا — الذكاء الاصطناعي يتولى الباقي.",
+    tour_step3_title:"ماسح الباركود",
+    tour_step3_desc:"وجّه الكاميرا إلى أي باركود طعام. امسك بمسافة 15–20 سم وتأكد من الإضاءة الجيدة. يتم تحميل معلومات التغذية تلقائيًا.",
+    tour_step4_title:"مسح بالصورة",
+    tour_step4_desc:"لا تجد باركود؟ التقط صورة لواجهة العبوة أو لملصق القيم الغذائية. الذكاء الاصطناعي يقرأ الاسم والقيم تلقائيًا.",
+    tour_step5_title:"تبويب التمرين",
+    tour_step5_desc:"وصف هدفك (مثال: 'بناء أكتاف' أو '30 دقيقة كارديو') وسيولد الذكاء الاصطناعي خطة تمرين كاملة مع السلاسل والراحة.",
+    tour_step6_title:"تبويب الماء",
+    tour_step6_desc:"تابع عدد أكواب الماء التي تشربها. اضغط +1، +2، +3 أو +4 لتسجيل سريع. يتم ضبط هدفك اليومي من الملف الشخصي.",
+    tour_step7_title:"تبويب الوزن",
+    tour_step7_desc:"سجل وزنك يوميًا. شاهد مخططًا للتقدم خلال 7 أو 30 يومًا. اضغط على 'تحليل الذكاء' لنصيحة شخصية.",
+    tour_step8_title:"الإنجازات",
+    tour_step8_desc:"اكسب شارات عند الاستخدام — أول مسح، تحقيق هدف الماء، إكمال تمرين، تسجيل 5 وجبات في يوم واحد، والمزيد.",
+    barcodeHint:"وجّه الكاميرا نحو الباركود",
+    home:"الرئيسية", food:"الغذاء", workout:"التمرين", water:"الماء", weight:"الوزن",
+    today:"اليوم", kcal:"سعرة",
+    streaks:"🔥 السلاسل", waterS:"الماء", calS:"السعرات", workoutS:"التمرين",
+    whatEat:"🍽️ ماذا يمكنني أن آكل؟", kcalLeft:"سعرة متبقية", findingMeals:"أبحث عن وجبات…",
+    aiReport:"✦ تقرير الذكاء الاصطناعي", generate:"إنشاء", analyzingDay:"أحلل يومك…",
+    todayScore:"درجة صحتك اليوم", wins:"✓ الإنجازات", improve:"↑ للتحسين", tmrw:"📅 الغد",
+    achievements:"🏆 الإنجازات",
+    macroScore:"درجة الماكرو", remaining:"المتبقي", addFood:"إضافة طعام",
+    searchTab:"🔍 بحث", aiTab:"✏️ ذكاء", barcodeTab:"📷 باركود", photoTab:"📸 صورة",
+    mealPlaceholder:"صف وجبتك… مثل: دجاج مشوي، أرز",
+    addToLog:"أضف للسجل", quickLog:"⭐ تسجيل سريع", todayLog:"سجل اليوم",
+    lookingUp:"جاري البحث…", savedDB:"✓ تم الحفظ في قاعدة البيانات!",
+    searchPlaceholder:"ابحث في +300,000 طعام…", searching:"جاري البحث…",
+    recentLogged:"🕐 سجلت مؤخراً",
+    aiWorkout:"مولد خطة التمرين", workoutPlaceholder:"مثل: بناء الكتفين، 30 دقيقة كارديو",
+    setsDone:"مجموعات منجزة", finishWorkout:"✓ إنهاء التمرين", historyLabel:"📜 السجل",
+    glassesToday:"كوب اليوم", goalReached:"🎉 تم تحقيق الهدف!", waterLogLabel:"سجل اليوم",
+    currentW:"الحالي", totalW:"الإجمالي", sinceStart:"منذ البداية", logW:"تسجيل", logBtn:"سجّل",
+    weightTrend:"مسار الوزن", analyzingW:"جاري التحليل…", aiInsight:"✦ تحليل الذكاء",
+    scanBarcode:"📷 مسح الباركود", closeBtn:"إغلاق", manualEntry:"إدخال الباركود يدوياً",
+    barcodePH:"مثال: 8410076901033", lookUp:"بحث",
+    startingCam:"جاري تشغيل الكاميرا…", camUnavail:"الكاميرا غير متاحة — استخدم الإدخال اليدوي",
+    photoScanTitle:"📸 مسح الصورة", takePhoto:"📷 التقط صورة", uploadGallery:"🖼️ رفع من المعرض",
+    capture:"📸 التقاط", retake:"→ إعادة التصوير", analyzeAI:"✨ تحليل بالذكاء الاصطناعي",
+    photoHint:"وجّه الكاميرا نحو واجهة أي منتج أو جدول القيم الغذائية. الذكاء الاصطناعي يقرأ كل شيء.",
+    pointLabel:"وجّه نحو الملصق", readingProd:"جاري قراءة المنتج…",
+    notFood:"تعذر التعرف على الطعام. جرب صورة أوضح.", analysisFailed:"فشل التحليل. حاول مرة أخرى.",
+    howManyG:"كم غرام أكلت؟", nutritionFor:"القيم الغذائية لـ", packageServing:"📦 حصة العبوة:",
+    per100g:"القيم لكل 100 غرام", addGLog:"إضافة {g}غ للسجل",
+    langTitle:"اختر اللغة",
+    tourSkip:"تخطي الجولة", tourNext:"التالي →", tourBack:"→ السابق", tourStart:"هيا نبدأ! 🚀",
+  },
+};
+
+// Simple translation function - reads current lang from localStorage each time
+function L(key){ const lang=localStorage.getItem("nutryx:lang")||"en"; return(LANGS[lang]||LANGS.en)[key]||(LANGS.en)[key]||key; }
+function isRTL(){ return (LANGS[localStorage.getItem("nutryx:lang")||"en"]||LANGS.en).dir==="rtl"; }
+function getLangFlag(){ return (LANGS[localStorage.getItem("nutryx:lang")||"en"]||LANGS.en).flag; }
+
+// Translate static DOM elements marked with data-i18n or data-i18n-html
+function translateStatic(){
+  try{
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k = el.getAttribute('data-i18n');
+      if(k){ const v = L(k); if(v!==undefined) el.textContent = v; }
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+      const k = el.getAttribute('data-i18n-html');
+      if(k){ const v = L(k); if(v!==undefined) el.innerHTML = v; }
+    });
+    // update install button aria and label if present
+    const ib = document.getElementById('install-btn');
+    if(ib && ib.getAttribute('data-i18n')){
+      const v = L(ib.getAttribute('data-i18n'));
+      if(v!==undefined){ ib.textContent = v; ib.setAttribute('aria-label', v); }
+    }
+  }catch(e){console.warn('translateStatic failed',e);}
+}
+
+// Language Switcher Modal
+function LangModal({onClose}){
+  const cur=localStorage.getItem("nutryx:lang")||"en";
+  const apply=(code)=>{
+    localStorage.setItem("nutryx:lang",code);
+    document.documentElement.dir=LANGS[code].dir;
+    document.documentElement.lang=code;
+    window.location.reload();
+  };
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{width:"100%",maxWidth:360,background:T.surface,borderRadius:24,padding:28,border:`1px solid ${T.accent}44`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+          <div style={{fontWeight:800,fontSize:20,color:T.text}}>{L("langTitle")}</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:T.textMuted,fontSize:26,cursor:"pointer",lineHeight:1}}>✕</button>
+        </div>
+        {Object.entries(LANGS).map(([code,lang])=>(
+          <button key={code} onClick={()=>apply(code)} style={{
+            width:"100%",display:"flex",alignItems:"center",gap:16,padding:"18px 20px",marginBottom:12,
+            background:cur===code?T.accentGlow:T.surfaceHigh,
+            border:`2px solid ${cur===code?T.accent:T.border}`,
+            borderRadius:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",
+          }}>
+            <span style={{fontSize:36}}>{lang.flag}</span>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:800,color:T.text,fontSize:18}}>{lang.name}</div>
+              <div style={{color:T.textMuted,fontSize:13,marginTop:2}}>{code==="ar"?"عربي":code==="de"?"Deutsch":"English"}</div>
+            </div>
+            {cur===code&&<span style={{color:T.accent,fontSize:24,fontWeight:900}}>✓</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Apply saved language on page load
+(()=>{
+  const l=localStorage.getItem("nutryx:lang")||"en";
+  document.documentElement.dir=LANGS[l]?.dir||"ltr";
+  document.documentElement.lang=l;
+})();
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+// ── Backup / Restore ──────────────────────────────────────────────────────────
+function getAllData(){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith("nutryx:")){
+      try{keys.push({k,v:localStorage.getItem(k)});}catch{}
+    }
+  }
+  return keys;
+}
+
+function exportBackup(){
+  const data=getAllData();
+  const backup={version:1,exportedAt:new Date().toISOString(),appName:"NUTRYX",data};
+  const json=JSON.stringify(backup,null,2);
+  const blob=new Blob([json],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`nutryx-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  // Save last backup date
+  localStorage.setItem("nutryx:last-backup",new Date().toISOString());
+  return data.length;
+}
+
+function importBackup(file,onSuccess,onError){
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const backup=JSON.parse(e.target.result);
+      if(!backup.data||!Array.isArray(backup.data))throw new Error("Invalid backup file");
+      // Clear old data
+      const oldKeys=[];
+      for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("nutryx:"))oldKeys.push(k);}
+      oldKeys.forEach(k=>localStorage.removeItem(k));
+      // Restore all keys
+      backup.data.forEach(({k,v})=>{try{localStorage.setItem(k,v);}catch{}});
+      onSuccess(backup.data.length,backup.exportedAt);
+    }catch(err){onError(err.message);}
+  };
+  reader.readAsText(file);
+}
+
+// ── Settings / Backup Modal ───────────────────────────────────────────────────
+function SettingsModal({onClose,profile}){
+  const[importing,setImporting]=useState(false),[msg,setMsg]=useState(null),[msgType,setMsgType]=useState("ok");
+  const[backupCount,setBackupCount]=useState(0);
+  const fileRef=useRef(null);
+  const lastBackup=localStorage.getItem("nutryx:last-backup");
+  const daysSince=lastBackup?Math.floor((Date.now()-new Date(lastBackup))/(1000*60*60*24)):null;
+
+  const doExport=()=>{
+    const count=exportBackup();
+    setMsg(`✅ Backup saved! ${count} items exported.`);
+    setMsgType("ok");
+    setBackupCount(count);
+  };
+
+  const doImport=(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    setImporting(true);setMsg(null);
+    importBackup(file,
+      (count,date)=>{
+        setImporting(false);
+        setMsg(`✅ Restored ${count} items from backup (${new Date(date).toLocaleDateString()}). Reloading…`);
+        setMsgType("ok");
+        setTimeout(()=>window.location.reload(),2000);
+      },
+      (err)=>{setImporting(false);setMsg(`❌ Failed: ${err}`);setMsgType("err");}
+    );
+    e.target.value="";
+  };
+
+  const totalItems=getAllData().length;
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:500,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,overflowY:"auto"}}>
+      <div style={{width:"100%",maxWidth:420,background:T.surface,borderRadius:24,padding:28,border:`1px solid ${T.border}`}}>
+
+        {/* Header */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+          <div style={{fontWeight:800,fontSize:20,color:T.text}}>⚙️ Settings & Backup</div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:T.textMuted,fontSize:26,cursor:"pointer",lineHeight:1}}>✕</button>
+        </div>
+
+        {/* Profile summary */}
+        <div style={{background:T.surfaceHigh,borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+          <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:8}}>YOUR PROFILE</div>
+          {profile?<>
+            <div style={{fontWeight:800,color:T.text,fontSize:16}}>{profile.name}</div>
+            <div style={{color:T.textMuted,fontSize:13,marginTop:4}}>
+              {profile.weight}kg · {profile.height}cm · {profile.age}y · Goal: {profile.goal}
+            </div>
+            <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
+              <span style={{background:`${T.accent}22`,color:T.accent,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{profile.calGoal} kcal</span>
+              <span style={{background:`${T.cyan}22`,color:T.cyan,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{profile.proteinGoal}g protein</span>
+              <span style={{background:`${T.accent}22`,color:T.accent,borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700}}>{profile.waterGoal} glasses</span>
+            </div>
+          </>:<div style={{color:T.textMuted}}>No profile found</div>}
+        </div>
+
+        {/* Storage status */}
+        <div style={{background:T.surfaceHigh,borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+          <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:10}}>DATA STATUS</div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+            <span style={{color:T.textMuted,fontSize:14}}>Items stored</span>
+            <span style={{color:T.text,fontWeight:700}}>{totalItems}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+            <span style={{color:T.textMuted,fontSize:14}}>Last backup</span>
+            <span style={{color:daysSince===null?T.red:daysSince>7?T.amber:T.green,fontWeight:700}}>
+              {daysSince===null?"Never":daysSince===0?"Today":`${daysSince} days ago`}
+            </span>
+          </div>
+          {(daysSince===null||daysSince>7)&&(
+            <div style={{marginTop:8,padding:"8px 12px",background:`${T.red}15`,border:`1px solid ${T.red}44`,borderRadius:8,fontSize:12,color:T.red}}>
+              ⚠️ {daysSince===null?"You have never backed up your data!":"Your last backup was over a week ago."} Back up now to keep your data safe.
+            </div>
+          )}
+        </div>
+
+        {/* Export */}
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:8}}>BACKUP YOUR DATA</div>
+          <button onClick={doExport} style={{width:"100%",background:T.accent,color:"#080d14",border:"none",borderRadius:14,padding:"15px",fontWeight:800,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <span style={{fontSize:20}}>📥</span> Download Backup File
+          </button>
+          <div style={{fontSize:12,color:T.textMuted,marginTop:6,textAlign:"center"}}>
+            Saves all meals, weight, profile, badges & settings as a .json file
+          </div>
+        </div>
+
+        {/* Import */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:8}}>RESTORE FROM BACKUP</div>
+          <button onClick={()=>fileRef.current?.click()} disabled={importing}
+            style={{width:"100%",background:T.surfaceHigh,color:T.text,border:`1px solid ${T.border}`,borderRadius:14,padding:"15px",fontWeight:700,cursor:importing?"not-allowed":"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10,opacity:importing?0.6:1}}>
+            <span style={{fontSize:20}}>📤</span> {importing?"Restoring…":"Select Backup File to Restore"}
+          </button>
+          <input ref={fileRef} type="file" accept=".json,application/json" onChange={doImport} style={{display:"none"}}/>
+          <div style={{fontSize:12,color:T.red,marginTop:6,textAlign:"center"}}>
+            ⚠️ This will replace all current data with the backup
+          </div>
+        </div>
+
+        {/* Message */}
+        {msg&&<div style={{padding:"12px 14px",background:msgType==="ok"?`${T.green}15`:`${T.red}15`,border:`1px solid ${msgType==="ok"?T.green:T.red}44`,borderRadius:12,fontSize:14,color:msgType==="ok"?T.green:T.red,marginBottom:12,fontWeight:600}}>{msg}</div>}
+
+        {/* How to keep data safe tips */}
+        <div style={{background:T.surfaceHigh,borderRadius:14,padding:"14px 16px"}}>
+          <div style={{fontSize:12,color:T.textMuted,fontWeight:700,letterSpacing:1,marginBottom:10}}>💡 HOW TO KEEP YOUR DATA SAFE</div>
+          {[
+            "Download a backup every week",
+            "Save the backup file to iCloud Drive or Google Drive",
+            "Always open the app in the same browser (Safari on iPhone)",
+            "Don't clear Safari history/data in iPhone Settings",
+          ].map((tip,i)=>(
+            <div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<3?`1px solid ${T.border}`:"none",alignItems:"flex-start"}}>
+              <span style={{color:T.accent,fontWeight:700,flexShrink:0}}>{i+1}.</span>
+              <span style={{color:T.textMuted,fontSize:13}}>{tip}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onClose} style={{marginTop:16,width:"100%",background:"transparent",border:`1px solid ${T.border}`,color:T.textMuted,borderRadius:14,padding:"13px",fontWeight:600,cursor:"pointer",fontSize:15}}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const[profile,setProfile]=useState(null),[loading,setLoading]=useState(true),[tab,setTab]=useState("home");
+  const[meals,setMeals]=useState([]),[water,setWater]=useState(0);
+  const[weights,setWeights]=useState([{kg:82.4,date:"May 14"},{kg:82.1,date:"May 15"},{kg:81.8,date:"May 17"},{kg:81.5,date:"May 19"}]);
+  const[streaks,setStreaks]=useState({water:0,calories:0,workout:0}),[badges,setBadges]=useState({});
+  const[showTour,setShowTour]=useState(false),[showLang,setShowLang]=useState(false),[showSettings,setShowSettings]=useState(false);
+
+  useEffect(()=>{
+    const p=store.get("profile"),s=store.get("streaks")||{water:4,calories:2,workout:1},b=store.get("badges")||{};
+    const m=store.get(`meals-${TODAY}`)||[];const w=store.get(`water-${TODAY}`)||0;const wts=store.get("weights");
+    if(p)setProfile(p);setStreaks(s);setBadges(b);setMeals(m);setWater(w);if(wts&&wts.length)setWeights(wts);
+    if(p&&!store.get("tour-done"))setShowTour(true);
+
+    // Backup reminder: warn if no backup in 7 days
+    const lastBackup=localStorage.getItem("nutryx:last-backup");
+    const daysSince=lastBackup?Math.floor((Date.now()-new Date(lastBackup))/(1000*60*60*24)):null;
+    if(p&&(daysSince===null||daysSince>7)){
+      // Show reminder after 3 seconds
+      setTimeout(()=>{
+        const reminder=document.getElementById("backup-reminder");
+        if(reminder)reminder.style.display="flex";
+      },3000);
+    }
+
+    setTimeout(()=>{const splash=document.getElementById("splash");if(splash){splash.classList.add("hidden");setTimeout(()=>splash.remove(),500);}},1500);
+    setLoading(false);
+  },[]);
+
+  const earnBadge=id=>{if(badges[id])return;const nb={...badges,[id]:true};setBadges(nb);store.set("badges",nb);};
+  const addMeal=m=>{const nm=[...meals,m];setMeals(nm);store.set(`meals-${TODAY}`,nm);};
+  const addWater=n=>{const nw=Math.min(water+n,20);setWater(nw);store.set(`water-${TODAY}`,nw);};
+  const logWeight=kg=>{const nw=[...weights,{kg,date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}];setWeights(nw);store.set("weights",nw);};
+  const today={...meals.reduce((a,m)=>({cal:a.cal+m.cal,protein:a.protein+m.protein,carbs:a.carbs+m.carbs,fat:a.fat+m.fat}),{cal:0,protein:0,carbs:0,fat:0}),water};
+
+  const TABS=[
+    {id:"home",    l:"🏠", n:L("home")},
+    {id:"nutrition",l:"🥗",n:L("food")},
+    {id:"workout", l:"💪", n:L("workout")},
+    {id:"water",   l:"💧", n:L("water")},
+    {id:"weight",  l:"⚖️", n:L("weight")},
+  ];
+
+  if(loading)return null;
+  if(!profile)return <Onboarding onDone={p=>{store.set("profile",p);setProfile(p);setTimeout(()=>setShowTour(true),500);}}/>;
+
+  return(
+    <div id="app-shell" dir={isRTL()?"rtl":"ltr"}>
+      {showTour&&<FeatureTour onDone={()=>{setShowTour(false);store.set("tour-done",true);}}/>}
+      {showLang&&<LangModal onClose={()=>setShowLang(false)}/>}
+      {showSettings&&<SettingsModal onClose={()=>setShowSettings(false)} profile={profile}/>}
+
+      {/* Backup reminder banner */}
+      <div id="backup-reminder" style={{display:"none",position:"fixed",top:"calc(env(safe-area-inset-top) + 70px)",left:12,right:12,background:"#1c1400",border:"1px solid #fbbf24",borderRadius:14,padding:"12px 16px",zIndex:100,alignItems:"center",gap:12,boxShadow:"0 4px 20px rgba(0,0,0,0.5)"}}>
+        <span style={{fontSize:22,flexShrink:0}}>⚠️</span>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,color:T.amber,fontSize:14}}>No recent backup!</div>
+          <div style={{color:T.textMuted,fontSize:12,marginTop:2}}>Back up your data to avoid losing it</div>
+        </div>
+        <button onClick={()=>{setShowSettings(true);document.getElementById("backup-reminder").style.display="none";}} style={{background:T.amber,color:"#080d14",border:"none",borderRadius:8,padding:"7px 14px",fontWeight:800,cursor:"pointer",fontSize:13,flexShrink:0}}>Backup</button>
+        <button onClick={()=>document.getElementById("backup-reminder").style.display="none"} style={{background:"none",border:"none",color:T.textMuted,fontSize:20,cursor:"pointer",flexShrink:0,lineHeight:1}}>✕</button>
+      </div>
+
+      {/* Header */}
+      <div style={{background:T.surface,borderBottom:`1px solid ${T.border}`,padding:`calc(env(safe-area-inset-top) + 12px) 20px 12px`,flexShrink:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:22,fontWeight:900,color:T.accent,letterSpacing:-0.5}}>NUTRYX</div>
+            <div style={{fontSize:11,color:T.textMuted}}>{TABS.find(tb=>tb.id===tab)?.n}</div>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:17,fontWeight:800,color:T.accent}}>{today.cal}<span style={{fontSize:10,color:T.textMuted}}>kcal</span></div>
+              <div style={{fontSize:10,color:T.textMuted}}>{L("today")}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:17,fontWeight:800,color:T.amber}}>{weights[weights.length-1]?.kg??"-"}<span style={{fontSize:10,color:T.textMuted}}>kg</span></div>
+              <div style={{fontSize:10,color:T.textMuted}}>{L("weight")}</div>
+            </div>
+            {/* Settings / Backup button */}
+            <button onClick={()=>setShowSettings(true)} aria-label="Open settings" style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,borderRadius:20,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18,flexShrink:0}} title="Settings & Backup">⚙️</button>
+            {/* Language button */}
+            <button onClick={()=>setShowLang(true)} aria-label="Change language" style={{background:T.surfaceHigh,border:`1px solid ${T.border}`,borderRadius:20,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:20,flexShrink:0}}>
+              {getLangFlag()}
+            </button>
+            {/* Help button */}
+            <button onClick={()=>setShowTour(true)} aria-label="Open tour" style={{background:T.accentGlow,border:`1px solid ${T.accent}44`,borderRadius:20,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:15,color:T.accent,fontWeight:800,flexShrink:0}}>?</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll area */}
+      <div id="scroll-area">
+        <div style={{padding:"16px 16px 24px"}} key={tab} className="sc">
+          {tab==="home"      &&<HomeSection profile={profile} today={today} streaks={streaks} badges={badges}/>}
+          {tab==="nutrition" &&<NutritionSection meals={meals} onAdd={addMeal} profile={profile} onBadge={earnBadge}/>}
+          {tab==="workout"   &&<WorkoutSection onBadge={earnBadge} onWorkoutDone={()=>setStreaks(s=>({...s,workout:s.workout+1}))}/>}
+          {tab==="water"     &&<WaterSection water={water} onAdd={addWater} profile={profile} onBadge={earnBadge}/>}
+          {tab==="weight"    &&<WeightSection weights={weights} onLog={logWeight} onBadge={earnBadge}/>}
+        </div>
+      </div>
+
+      {/* Bottom nav */}
+      <div id="bottom-nav" style={{background:T.surface,borderTop:`1px solid ${T.border}`}}>
+        <div style={{display:"flex",justifyContent:"space-around",padding:"8px 0"}}>
+          {TABS.map(tb=>(
+            <button key={tb.id} onClick={()=>setTab(tb.id)}
+              style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"6px 20px",minWidth:56}}>
+              <div style={{fontSize:24,transition:"transform 0.2s",transform:tab===tb.id?"scale(1.2)":"scale(1)"}}>{tb.l}</div>
+              <div style={{fontSize:10,fontWeight:700,color:tab===tb.id?T.accent:T.textMuted,transition:"color 0.2s"}}>{tb.n}</div>
+              {tab===tb.id&&<div style={{width:20,height:2,background:T.accent,borderRadius:1}}/>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+// Translate static elements that are outside React
+setTimeout(()=>{ try{ translateStatic(); }catch(e){} }, 30);
+</script>
+
+<script>
+// ── Service Worker (offline support) ────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE = 'nutryx-v1';
+    const ASSETS = ['./'];
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(()=>{})));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch', e => {
+      if(e.request.method !== 'GET') return;
+      try{
+        const reqUrl = new URL(e.request.url);
+        if(reqUrl.origin !== self.location.origin) return;
+        if(reqUrl.pathname.startsWith('/api/')) return;
+      }catch(err){}
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+        if(res && res.ok){
+          const clone = res.clone();
+          caches.open(CACHE).then(c=>c.put(e.request,clone));
+        }
+        return res;
+      }).catch(()=>caches.match('./'))));
+    });
+  `;
+  const blob = new Blob([swCode], {type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ── PWA Install prompt ───────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  if(!localStorage.getItem('nutryx:installed')){
+    setTimeout(()=>document.getElementById('install-banner')?.classList.add('show'), 3000);
+  }
+});
+document.getElementById('install-btn')?.addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const {outcome} = await deferredPrompt.userChoice;
+  if(outcome==='accepted') localStorage.setItem('nutryx:installed','1');
+  deferredPrompt = null;
+  document.getElementById('install-banner')?.classList.remove('show');
+});
+document.getElementById('dismiss-btn')?.addEventListener('click', () => {
+  document.getElementById('install-banner')?.classList.remove('show');
+});
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem('nutryx:installed','1');
+  document.getElementById('install-banner')?.classList.remove('show');
+});
+
+// ── iOS install hint ──────────────────────────────────────────────────────────
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+if(isIOS && !isStandalone && !localStorage.getItem('nutryx:ios-hint')){
+  setTimeout(()=>{
+    const hint = document.getElementById('ios-hint');
+    if(hint) hint.style.display = 'block';
+    localStorage.setItem('nutryx:ios-hint','1');
+  }, 4000);
+}
+</script>
+</body>
+</html>

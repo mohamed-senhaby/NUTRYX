@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#3b82f6"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="NUTRYX"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="NUTRYX – Your AI-powered health & nutrition tracker"/>
+
+<!-- PWA Manifest inline -->
+<script>
+const manifestData = {
+  name: "NUTRYX – AI Health Tracker",
+  short_name: "NUTRYX",
+  description: "AI-powered nutrition, workout, water & weight tracker",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#080d14",
+  theme_color: "#3b82f6",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.addEventListener('DOMContentLoaded', () => {
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = manifestURL;
+  document.head.appendChild(link);
+});
+</script>
+
+<!-- Apple touch icon via SVG data URI -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
+<title>NUTRYX</title>
+
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body,#root{height:100%;width:100%;overflow:hidden;}
+  body{background:#080d14;color:#e8f0fe;font-family:'DM Sans','Segoe UI',system-ui,sans-serif;overscroll-behavior:none;}
+  #root{height:100vh;height:100dvh;overflow:hidden;}
+  #app-shell{height:100%;display:flex;flex-direction:column;}
+  #scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;padding-bottom:env(safe-area-inset-bottom);}
+  #bottom-nav{flex-shrink:0;padding-bottom:calc(env(safe-area-inset-bottom) + 4px);}
+  /* Install banner */
+  #install-banner{display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:16px;padding:14px 16px;z-index:999;gap:12px;align-items:center;}
+  #install-banner.show{display:flex;}
+  /* Splash screen */
+  #splash{position:fixed;inset:0;background:#080d14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s;}
+  #splash.hidden{opacity:0;pointer-events:none;}
+  input,button{font-family:inherit;}
+  input::placeholder{color:#5d82b4;}
+  ::-webkit-scrollbar{display:none;}
+  button:active{transform:scale(0.96);transition:transform 0.1s;}
+  @media(hover:hover){button:hover{opacity:0.85;}}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- Splash Screen -->
+<div id="splash">
+  <svg width="90" height="90" viewBox="0 0 90 90">
+    <rect width="90" height="90" rx="20" fill="#0d1520"/>
+    <text x="45" y="66" text-anchor="middle" font-size="58" font-family="system-ui,sans-serif" font-weight="900" fill="#3b82f6">N</text>
+  </svg>
+  <div style="font-size:28px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px;margin-top:16px;">NUTRYX</div>
+  <div data-i18n="tagline" style="font-size:13px;color:#5d82b4;margin-top:6px;">Your AI Health Coach</div>
+  <div style="margin-top:40px;display:flex;gap:8px;">
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0s infinite;"></div>
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0.2s infinite;"></div>
+    <div class="dot" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;animation:pulse 1.2s 0.4s infinite;"></div>
+  </div>
+</div>
+<style>
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes scanLine{0%{top:10%}50%{top:85%}100%{top:10%}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes hintPop{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.sc{animation:fadeUp .3s ease both}
+.hint-box{animation:slideDown 0.25s ease both}
+</style>
+
+<!-- PWA Install Banner -->
+<div id="install-banner">
+  <div style="flex:1">
+    <div data-i18n="installTitle" style="font-weight:700;color:#e8f0fe;font-size:14px;">Install NUTRYX</div>
+    <div data-i18n="installSub" style="color:#5d82b4;font-size:12px;margin-top:2px;">Add to home screen for the full app experience</div>
+  </div>
+  <button id="install-btn" data-i18n="installBtn" aria-label="Install NUTRYX" style="background:#3b82f6;color:#080d14;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">Install</button>
+  <button id="dismiss-btn" aria-label="Dismiss install prompt" style="background:none;border:none;color:#5d82b4;font-size:20px;cursor:pointer;padding:4px;">✕</button>
+</div>
+
+<!-- iOS Install Hint (shown once on iOS) -->
+<div id="ios-hint" style="display:none;position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:16px;padding:14px 16px;z-index:999;font-size:13px;color:#e8f0fe;text-align:center;">
+  <span data-i18n-html="iosHintHTML">📲 Tap <b>Share</b> then <b>"Add to Home Screen"</b> to install NUTRYX</span>
+  <button data-i18n="gotIt" onclick="document.getElementById('ios-hint').style.display='none'" style="display:block;margin:10px auto 0;background:none;border:1px solid #3b82f6;color:#3b82f6;border-radius:8px;padding:6px 20px;font-weight:700;cursor:pointer;font-size:13px;">Got it</button>
+</div>
+
+<div id="root"></div>
+
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

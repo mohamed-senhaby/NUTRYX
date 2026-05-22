@@ -1,0 +1,23 @@
+{
+  "name": "nutryx-proxy",
+  "version": "0.1.0",
+  "description": "Minimal local proxy for NUTRYX to keep API keys server-side",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
