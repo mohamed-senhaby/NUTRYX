@@ -20,27 +20,25 @@ setTimeout(()=>{
 	}catch(e){/* ignore */}
 }, 800);
 
-// Register service worker (optional) with update handling
-if('serviceWorker' in navigator){
-	window.addEventListener('load', ()=>{
-		navigator.serviceWorker.register('/sw.js').then(reg=>{
+// Register service worker (only in production) with update handling
+if (import.meta.env && import.meta.env.PROD && 'serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+		navigator.serviceWorker.register('/sw.js').then(reg => {
 			console.log('Service worker registered', reg);
-			try{
-				// If there's an active waiting worker, ask it to skip waiting so update applies
-				if(reg.waiting) reg.waiting.postMessage({type: 'SKIP_WAITING'});
-			}catch(e){/* ignore */}
+			try {
+				if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+			} catch (e) { /* ignore */ }
 
-			reg.addEventListener('updatefound', ()=>{
+			reg.addEventListener('updatefound', () => {
 				const nw = reg.installing;
-				if(!nw) return;
-				nw.addEventListener('statechange', ()=>{
-					if(nw.state === 'installed' && navigator.serviceWorker.controller){
-						// New content available — you could show a toast to the user here
+				if (!nw) return;
+				nw.addEventListener('statechange', () => {
+					if (nw.state === 'installed' && navigator.serviceWorker.controller) {
 						console.log('New service worker installed. Reload to apply updates.');
 					}
 				});
 			});
-		}).catch(e=>console.warn('SW register failed', e));
+		}).catch(e => console.warn('SW register failed', e));
 	});
 }
 
