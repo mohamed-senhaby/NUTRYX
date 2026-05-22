@@ -12,13 +12,25 @@ export default function FoodSearch({onAdd,profile}){
   const debRef=useRef(null);
   useEffect(()=>{setRecent(store.get("recent-foods")||[]);}, []);
   const search=useCallback(async(q)=>{
-    if(!q.trim()){setResults([]);return;}setBusy(true);
-    const cached=store.get(`search:${q.toLowerCase()}`);
-    if(cached&&Date.now()-cached.ts<3600000){setResults(cached.data);setBusy(false);return;}
-    const[u,o]=await Promise.all([searchUSDA(q),searchOFF(q)]);
-    const merged=[...u,...o].filter((v,i,a)=>a.findIndex(x=>x.name===v.name)===i);
-    store.set(`search:${q.toLowerCase()}`,{data:merged,ts:Date.now()});
-    setResults(merged);setBusy(false);
+    if(!q.trim()){setResults([]);return;}
+    setBusy(true);
+    try{
+      console.debug('FoodSearch.search start', q);
+      const cached = store.get(`search:${q.toLowerCase()}`);
+      // only use cache when it contains results (avoid reusing earlier empty CORS-failed cache)
+      if (cached && Array.isArray(cached.data) && cached.data.length > 0 && (Date.now() - cached.ts) < 3600000){
+        console.debug('FoodSearch using cache', q, cached.data.length);
+        setResults(cached.data); setBusy(false); return;
+      }
+      const [u,o] = await Promise.all([searchUSDA(q), searchOFF(q)]);
+      const merged = [...u, ...o].filter((v,i,a)=>a.findIndex(x=>x.name===v.name)===i);
+      console.debug('FoodSearch fetched', q, { usda: u.length, off: o.length, merged: merged.length });
+      store.set(`search:${q.toLowerCase()}`, { data: merged, ts: Date.now() });
+      setResults(merged); setBusy(false);
+    }catch(err){
+      console.warn('FoodSearch search error', err);
+      setResults([]); setBusy(false);
+    }
   },[]);
   useEffect(()=>{clearTimeout(debRef.current);if(!query.trim()){setResults([]);return;}debRef.current=setTimeout(()=>search(query),400);return()=>clearTimeout(debRef.current);},[query,search]);
   const loadCat=async(c)=>{setCat(c.id);setQuery(c.q);await search(c.q);};
