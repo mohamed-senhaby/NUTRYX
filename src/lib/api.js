@@ -77,6 +77,16 @@ export async function searchOFF(q){
       return (d.products||[]).filter(p=>p.product_name).map(extractOFF);
     }catch(err){ console.warn('searchOFF error', url, err); }
   }
+  // As a last resort, try the OpenFoodFacts public API directly from the client
+  try{
+    const worldUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=8&fields=product_name,brands,nutriments,serving_size,nutriscore_grade,image_front_small_url`;
+    const r2 = await fetch(worldUrl, { headers: { 'Accept': 'application/json' } });
+    if(!r2.ok){ const txt = await r2.text(); console.warn('OFF direct error', r2.status, txt.slice(0,200)); return []; }
+    const ct2 = r2.headers.get('content-type') || '';
+    if(!ct2.includes('application/json')){ const txt = await r2.text(); console.warn('OFF direct non-json', ct2, txt.slice(0,200)); return []; }
+    const d2 = await r2.json();
+    return (d2.products||[]).filter(p=>p.product_name).map(extractOFF);
+  }catch(err){ console.warn('searchOFF direct error', err); }
   return [];
 }
 
