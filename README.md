@@ -1,3 +1,45 @@
+# NUTRYX (local dev)
+
+Quick notes to run the app locally and the test suite.
+
+Environment
+- `USDA_API_KEY` — (recommended) set to enable USDA search proxy. Without it the server returns 503 for USDA routes.
+- `ANTHROPIC_API_KEY` — (optional) required for AI features via `/api/ai`.
+- `PORT` — optional port for the local proxy (default `8787`).
+
+Recommended dev commands
+- Start only the dev front-end:
+
+```bash
+npm run dev
+```
+
+- Start the proxy / server (if you want API proxying):
+
+```bash
+# set envs in the same shell
+export USDA_API_KEY=your_key_here
+export ANTHROPIC_API_KEY=your_key_here
+npm start
+```
+
+- Convenience: run both proxy and dev server (uses `scripts/dev-all.js`):
+
+```bash
+npm run dev:all
+```
+
+Tests
+- Unit + integration (Vitest):
+
+```bash
+npm test
+```
+
+Notes
+- The repository uses a minimal Node proxy (`server.js`) so API keys are never embedded in the browser.
+- Service worker is gated to production — it won't register during development to avoid stale caches.
+- If the OpenFoodFacts search appears to return HTML (instead of JSON), ensure the proxy is running — the proxy adds proper `Accept` and `User-Agent` headers.
 NUTRYX — Personal Nutrition PWA
 
 A small modular PWA migrated from a single-file prototype (`nutryx-pwa.html`) to a Vite + React app.
