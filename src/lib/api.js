@@ -48,21 +48,36 @@ function extractOFF(p){
 
 export async function searchUSDA(q){
   try{
-    const res = await fetch('/api/usda/search', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,pageSize:12})});
-    if(!res.ok){ console.warn('USDA proxy error', await res.text()); return []; }
-    const d = await res.json();
-    return (d.foods||[]).map(extractUSDA);
+    const body = JSON.stringify({ q, pageSize: 12 });
+    const urls = ['/api/usda/search', `${location.protocol}//${location.hostname}:8787/api/usda/search`];
+    for(const url of urls){
+      try{
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+        if(!res.ok){ const txt = await res.text(); console.warn('USDA proxy error', url, res.status, txt.slice(0,200)); continue; }
+        const d = await res.json();
+        return (d.foods||[]).map(extractUSDA);
+      }catch(err){ console.warn('searchUSDA error', url, err); }
+    }
+    return [];
   }catch(err){ console.warn('searchUSDA error',err); return []; }
 }
 
 export async function searchOFF(q){
-  try{
-    // Use local proxy to avoid CORS issues in development
-    const res = await fetch('/api/off/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, pageSize: 8 }) });
-    if(!res.ok){ console.warn('OFF proxy error', await res.text()); return []; }
-    const d = await res.json();
-    return (d.products||[]).filter(p=>p.product_name).map(extractOFF);
-  }catch(err){ console.warn('searchOFF error',err); return []; }
+  const payload = JSON.stringify({ q, pageSize: 8 });
+  const candidates = ['/api/off/search', `${location.protocol}//${location.hostname}:8787/api/off/search`];
+  for(const url of candidates){
+    try{
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
+      if(!res.ok){ const txt = await res.text(); console.warn('OFF proxy error', url, res.status, txt.slice(0,200)); continue; }
+      const ct = res.headers.get('content-type') || '';
+      if(!ct.includes('application/json')){
+        const txt = await res.text(); console.warn('OFF proxy non-json', url, ct, txt.slice(0,200)); continue;
+      }
+      const d = await res.json();
+      return (d.products||[]).filter(p=>p.product_name).map(extractOFF);
+    }catch(err){ console.warn('searchOFF error', url, err); }
+  }
+  return [];
 }
 
 export async function lookupBarcode(barcode){
