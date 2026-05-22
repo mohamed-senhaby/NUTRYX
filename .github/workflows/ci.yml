@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - name: Run unit tests
-        run: npx vitest run
+      - name: Run unit tests and coverage
+        run: npm run test:ci
       - run: npm run build
       - run: npm run lint || true
