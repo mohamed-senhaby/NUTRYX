@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tag, Btn, OutlineBtn, T, Input } from '../lib/ui.jsx';
 import { store } from '../lib/store.js';
 
@@ -24,6 +24,15 @@ export default function ProductCard({product,onAdd,onRescan,scanType}){
   const servingGrams = parseServingGrams(product.serving);
   const gramsValForDisplay = parseFloat(grams);
   const displayMultiplier = (!isNaN(gramsValForDisplay) && gramsValForDisplay>0) ? (servingGrams ? gramsValForDisplay/servingGrams : gramsValForDisplay/100) : (servings||1);
+
+  // initialize grams field from serving info when available
+  useEffect(() => {
+    if((!grams || grams === '') && servingGrams){
+      setGrams(String(servingGrams * (servings||1)));
+    }
+  }, [servingGrams]);
+
+  const step = servingGrams || 10;
 
   const handleAdd=()=>{
     const k=`food:n:${(product.name||"").toLowerCase().replace(/\s+/g,"-")}`;
@@ -69,21 +78,22 @@ export default function ProductCard({product,onAdd,onRescan,scanType}){
       </div>
       {product.insight&&<div style={{marginBottom:14,padding:"10px 12px",background:`${T.cyan}10`,border:`1px solid ${T.cyan}33`,borderRadius:10,fontSize:13,color:T.textMuted,fontStyle:"italic"}}>💡 {product.insight}</div>}
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-        <span style={{color:T.textMuted,fontSize:14,fontWeight:600}}>Servings:</span>
-        <div style={{display:"flex",alignItems:"center",gap:10,background:T.surfaceHigh,borderRadius:12,padding:"6px 14px"}}>
-          <button onClick={()=>{setServings(s=>Math.max(0.25,+(s-0.25).toFixed(2))); setGrams('');}} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>−</button>
-          <span style={{color:T.text,fontWeight:800,fontSize:20,minWidth:36,textAlign:"center"}}>{servings}</span>
-          <button onClick={()=>{setServings(s=>+(s+0.25).toFixed(2)); setGrams('');}} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>+</button>
+        <span style={{color:T.textMuted,fontSize:14,fontWeight:600}}>Amount (g):</span>
+        <div style={{display:"flex",alignItems:"center",gap:10,background:T.surfaceHigh,borderRadius:12,padding:"6px 8px"}}>
+          <button onClick={()=>{ setGrams(g=>{
+              const v = Math.max(0, (parseFloat(g)||0) - step); return String(Math.round(v*10)/10);
+            }); }} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>−</button>
+          <Input value={grams} onChange={e=>{ setGrams(e.target.value); }} placeholder="g" style={{width:120}} type="number" />
+          <button onClick={()=>{ setGrams(g=>{
+              const v = (parseFloat(g)||0) + step; return String(Math.round(v*10)/10);
+            }); }} style={{background:"none",border:"none",color:T.accent,fontSize:24,cursor:"pointer",fontWeight:700,lineHeight:1}}>+</button>
         </div>
-        <span style={{color:T.textMuted,fontSize:13}}>{Math.round(p.cal*servings)} kcal</span>
+        <span style={{color:T.textMuted,fontSize:13}}>{Math.round((p.cal||0)*displayMultiplier)} kcal</span>
 
         <div style={{marginLeft:8,display:'flex',alignItems:'center',gap:8}}>
-          <span style={{color:T.textMuted,fontSize:14,fontWeight:600}}>Grams:</span>
-          <Input value={grams} onChange={e=>{ setGrams(e.target.value); }} placeholder="g" style={{width:100}} type="number" />
           <div style={{color:T.textMuted,fontSize:12}}>{servingGrams?`(per ${servingGrams} g)`:'(assumes per 100 g)'}</div>
+          <div style={{marginLeft:8,color:T.textMuted,fontSize:13}}>{(!isNaN(parseFloat(grams)) && parseFloat(grams)>0) ? `≈ ${(displayMultiplier).toFixed(2)} servings` : ``}</div>
         </div>
-
-        <div style={{marginLeft:8,color:T.textMuted,fontSize:13}}>{(!isNaN(parseFloat(grams)) && parseFloat(grams)>0) ? `≈ ${(displayMultiplier).toFixed(2)} servings` : ``}</div>
       </div>
       {saved&&<div style={{marginBottom:10,padding:"8px 12px",background:`${T.green}15`,border:`1px solid ${T.green}44`,borderRadius:8,fontSize:13,color:T.green}}>✓ Saved to your database!</div>}
       <div style={{display:"flex",gap:10}}>
