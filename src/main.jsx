@@ -9,6 +9,17 @@ root.render(<App />);
 // Small delay to let React mount before updating static DOM
 setTimeout(()=>{ try{ translateStatic(); }catch(e){ console.warn('translateStatic failed', e); } }, 50);
 
+// Remove the static splash screen (present in the static HTML) after mount
+setTimeout(()=>{
+	try{
+		const splash = document.getElementById('splash');
+		if(splash){
+			splash.classList.add('hidden');
+			setTimeout(()=>{ try{ splash.remove(); }catch(e){} }, 500);
+		}
+	}catch(e){/* ignore */}
+}, 800);
+
 // Register service worker (optional) with update handling
 if('serviceWorker' in navigator){
 	window.addEventListener('load', ()=>{
