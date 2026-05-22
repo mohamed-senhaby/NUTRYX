@@ -85,6 +85,22 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Proxy OpenFoodFacts search to avoid CORS issues in browser
+  if (url.pathname === '/api/off/search' && req.method === 'POST'){
+    const body = await getRequestBody(req);
+    if (!body) return sendJSON(res,400,{error:'invalid json'});
+    const q = body.q || '';
+    const pageSize = body.pageSize || 8;
+    try{
+      const apiUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=${pageSize}&fields=product_name,brands,nutriments,serving_size,nutriscore_grade,image_front_small_url`;
+      const r = await fetch(apiUrl);
+      const j = await r.json();
+      return sendJSON(res, r.ok ? 200 : 502, j);
+    }catch(err){
+      return sendJSON(res,502,{error:'OFF proxy failed', detail:String(err)});
+    }
+  }
+
   sendJSON(res,404,{error:'not_found',path:url.pathname});
 });
 

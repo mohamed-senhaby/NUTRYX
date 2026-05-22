@@ -56,7 +56,13 @@ export async function searchUSDA(q){
 }
 
 export async function searchOFF(q){
-  try{const r=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=8&fields=product_name,brands,nutriments,serving_size,nutriscore_grade,image_front_small_url`);const d=await r.json();return(d.products||[]).filter(p=>p.product_name).map(extractOFF);}catch{return[];}
+  try{
+    // Use local proxy to avoid CORS issues in development
+    const res = await fetch('/api/off/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, pageSize: 8 }) });
+    if(!res.ok){ console.warn('OFF proxy error', await res.text()); return []; }
+    const d = await res.json();
+    return (d.products||[]).filter(p=>p.product_name).map(extractOFF);
+  }catch(err){ console.warn('searchOFF error',err); return []; }
 }
 
 export async function lookupBarcode(barcode){
