@@ -51,3 +51,26 @@ If you want, I can:
 - Harden the service worker for production and integrate it into the build (recommended).
 - Add unit tests and CI to run them automatically.
 
+Tests
+
+- Run unit tests locally with Vitest:
+
+```bash
+npm run test
+```
+
+- Run coverage (CI-style):
+
+```bash
+npm run test:ci
+```
+
+CI
+
+- The repository includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs tests and builds the app on push/pull-request to `main`.
+
+Contributing
+
+- Open a PR with changes and include a brief description of what you changed and why. The CI will run tests automatically.
+
+
