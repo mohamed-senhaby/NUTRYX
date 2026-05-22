@@ -93,7 +93,13 @@ const server = http.createServer(async (req, res) => {
     const pageSize = body.pageSize || 8;
     try{
       const apiUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=${pageSize}&fields=product_name,brands,nutriments,serving_size,nutriscore_grade,image_front_small_url`;
-      const r = await fetch(apiUrl);
+      // Ensure we request JSON and present a User-Agent to avoid HTML fallbacks
+      const r = await fetch(apiUrl, { headers: { 'Accept': 'application/json', 'User-Agent': 'NUTRYX-Proxy/1.0 (+https://nutryx.local)' } });
+      const contentType = r.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')){
+        const txt = await r.text();
+        return sendJSON(res,502,{error:'OFF proxy failed', detail:'non-json response', status:r.status, snippet: txt.slice(0,200)});
+      }
       const j = await r.json();
       return sendJSON(res, r.ok ? 200 : 502, j);
     }catch(err){
