@@ -7,6 +7,7 @@ import { searchUSDA, searchOFF } from '../lib/api.js';
 export default function FoodSearch({onAdd,profile}){
   const[query,setQuery]=useState("");const[results,setResults]=useState([]);const[busy,setBusy]=useState(false);
   const[selected,setSelected]=useState(null);const[servings,setServings]=useState(1);
+  const [grams,setGrams] = useState('');
   const[cat,setCat]=useState(null);const[recent,setRecent]=useState([]);
   const debRef=useRef(null);
   useEffect(()=>{setRecent(store.get("recent-foods")||[]);}, []);
@@ -22,10 +23,55 @@ export default function FoodSearch({onAdd,profile}){
   useEffect(()=>{clearTimeout(debRef.current);if(!query.trim()){setResults([]);return;}debRef.current=setTimeout(()=>search(query),400);return()=>clearTimeout(debRef.current);},[query,search]);
   const loadCat=async(c)=>{setCat(c.id);setQuery(c.q);await search(c.q);};
   const selectFood=(f)=>{setSelected(f);setServings(1);};
-  const addFood=()=>{if(!selected)return;const p=selected.perServing;const item={name:`${selected.name}${selected.brand?` (${selected.brand})`:""}`,cal:Math.round(p.cal*servings),protein:+(p.protein*servings).toFixed(1),carbs:+(p.carbs*servings).toFixed(1),fat:+(p.fat*servings).toFixed(1)};onAdd(item);const rf=[selected,...(recent||[]).filter(f=>f.name!==selected.name)].slice(0,10);setRecent(rf);store.set("recent-foods",rf);store.set(`food:n:${selected.name.toLowerCase().replace(/\s+/g,"-")}`,{...selected,savedAt:Date.now()});setSelected(null);};
+
+  const parseServingGrams = (s)=>{
+    if(!s) return null;
+    const m1 = String(s).match(/(\d+(?:\.\d+)?)\s*(g|gram|grams)\b/i);
+    if(m1) return parseFloat(m1[1]);
+    const m2 = String(s).match(/\((\d+(?:\.\d+)?)\s*(g|gram|grams)\)/i);
+    if(m2) return parseFloat(m2[1]);
+    const m3 = String(s).match(/^(\d+(?:\.\d+)?)$/);
+    if(m3) return parseFloat(m3[1]);
+    return null;
+  };
+
+  const addFood=()=>{
+    if(!selected) return;
+    const p = selected.perServing || {};
+    const servingGrams = parseServingGrams(selected?.serving);
+    const gramsVal = parseFloat(grams);
+    let multiplier = servings||1;
+    if(!isNaN(gramsVal) && gramsVal>0){
+      if(servingGrams){ multiplier = gramsVal / servingGrams; }
+      else { multiplier = gramsVal / 100; }
+    }
+    const item={
+      name:`${selected.name}${selected.brand?` (${selected.brand})`:''}`,
+      cal:Math.round((p.cal||0) * multiplier),
+      protein:+((p.protein||0) * multiplier).toFixed(1),
+      carbs:+((p.carbs||0) * multiplier).toFixed(1),
+      fat:+((p.fat||0) * multiplier).toFixed(1)
+    };
+    onAdd(item);
+    const rf=[selected,...(recent||[]).filter(f=>f.name!==selected.name)].slice(0,10);setRecent(rf);store.set("recent-foods",rf);store.set(`food:n:${selected.name.toLowerCase().replace(/\s+/g,"-")}`,{...selected,savedAt:Date.now()});setSelected(null);
+    setGrams('');
+  };
   const srcColor={usda:T.green,openfoodfacts:T.accent,ai:T.amber,"local-db":T.purple};
   const srcLabel={usda:"USDA",openfoodfacts:"Branded",ai:"AI","local-db":"Saved"};
   const nc={A:"#037d3a",B:"#85bb2f",C:"#fecb02",D:"#ee8100",E:"#e63e11"};
+  // compute display multiplier (prefer grams input when provided)
+  const p = selected?.perServing || {};
+  const servingGrams = parseServingGrams(selected?.serving);
+  const gramsValForDisplay = parseFloat(grams);
+  const displayMultiplier = (!isNaN(gramsValForDisplay) && gramsValForDisplay>0) ? (servingGrams ? gramsValForDisplay/servingGrams : gramsValForDisplay/100) : (servings||1);
+  useEffect(()=>{
+    if(selected && (!grams || grams === '') && servingGrams){
+      setGrams(String(servingGrams * (servings||1)));
+    }
+  },[servingGrams,selected]);
+
+  const step = servingGrams || 10;
+
   return(
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
       <div style={{position:"relative"}}>
