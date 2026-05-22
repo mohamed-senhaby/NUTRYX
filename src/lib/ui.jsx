@@ -69,7 +69,13 @@ export function Hint({title,children,icon="💡",color=T.amber}){
       if(spaceBelow>=120){ top=rect.bottom+6; }
       else if(spaceAbove>=120){ top=rect.top-6; transformOrigin=transformOrigin.replace("top","bottom"); }
       else { top=Math.max(60,rect.top-80); }
-      setPos({top,left,width:boxW,transformOrigin,flipY:spaceBelow<120&&spaceAbove>=120});
+
+      // compute arrow position so it visually points at the button center
+      const anchorX = rect.left + rect.width/2;
+      let arrowLeft = Math.round(anchorX - left - 5); // center minus half arrow width
+      arrowLeft = Math.max(10, Math.min(arrowLeft, boxW - 18));
+
+      setPos({top,left,width:boxW,transformOrigin,flipY:spaceBelow<120&&spaceAbove>=120,arrowLeft});
     }
     setOpen(true);
     _activeHintClose=()=>setOpen(false);
@@ -113,6 +119,9 @@ export function Hint({title,children,icon="💡",color=T.amber}){
               background:T.surface,
               border:`1.5px solid ${color}88`,
               transform:"rotate(45deg)",
+              left: (pos && typeof pos.arrowLeft !== 'undefined') ? pos.arrowLeft : 14,
+              top: pos && pos.flipY ? 'auto' : -6,
+              bottom: pos && pos.flipY ? -6 : 'auto',
             }}/>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
