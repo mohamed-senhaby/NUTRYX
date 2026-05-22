@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { store } from './lib/store.js';
 import { L, translateStatic } from './lib/i18n.js';
 import { T } from './lib/ui.jsx';
+import db from './lib/db.js';
+import { uploadBackup } from './lib/supabase.js';
 
 import FeatureTour from './components/FeatureTour.jsx';
 import Onboarding from './components/Onboarding.jsx';
@@ -31,7 +33,49 @@ export default function App(){
   const [showTour,setShowTour] = useState(!store.get('seenTour'));
   const [tab,setTab] = useState('home');
 
-  useEffect(()=>{ store.set('meals',meals); },[meals]);
+  // initialize DB and migrate meals from localStorage if needed
+  useEffect(()=>{
+    let mounted = true;
+    (async ()=>{
+      try{
+        await db.init();
+        await db.migrateFromLocalStorage();
+        const fromDb = await db.getMeals();
+        if (mounted && Array.isArray(fromDb) && fromDb.length){
+          setMeals(fromDb);
+        }
+      }catch(e){ console.warn('DB init/migrate error', e); }
+    })();
+    return ()=>{ mounted = false; };
+  },[]);
+
+  // listen for imports/remote sync events to refresh meals
+  useEffect(()=>{
+    const onImported = async ()=>{
+      try{ const fresh = await db.getMeals(); setMeals(fresh||[]); }catch(e){}
+    };
+    window.addEventListener('nutryx:imported', onImported);
+    return ()=>{ window.removeEventListener('nutryx:imported', onImported); };
+  },[]);
+
+  useEffect(()=>{
+    store.set('meals',meals);
+    (async ()=>{ try{ await db.saveMeals(meals); }catch(e){} })();
+  },[meals]);
+
+  // Auto-sync to cloud when meals change (debounced)
+  useEffect(()=>{
+    const enabled = store.get('supabase:autoSync');
+    if (!enabled) return;
+    let t = setTimeout(async ()=>{
+      try{
+        const payload = await db.exportJSON();
+        await uploadBackup(payload);
+        console.log('Auto-sync complete');
+      }catch(e){ console.warn('Auto-sync failed', e); }
+    }, 1000);
+    return ()=>{ clearTimeout(t); };
+  },[meals]);
   useEffect(()=>{ store.set('profile',profile); },[profile]);
   useEffect(()=>{ store.set('streaks',streaks); },[streaks]);
   useEffect(()=>{ store.set('badges',badges); },[badges]);

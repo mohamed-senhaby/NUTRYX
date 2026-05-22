@@ -10,33 +10,9 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="description" content="NUTRYX – Your AI-powered health & nutrition tracker"/>
 
-<!-- PWA Manifest inline -->
-<script>
-const manifestData = {
-  name: "NUTRYX – AI Health Tracker",
-  short_name: "NUTRYX",
-  description: "AI-powered nutrition, workout, water & weight tracker",
-  start_url: "./",
-  display: "standalone",
-  background_color: "#080d14",
-  theme_color: "#3b82f6",
-  orientation: "portrait",
-  icons: [
-    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
-  ]
-};
-const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
-const manifestURL = URL.createObjectURL(blob);
-document.addEventListener('DOMContentLoaded', () => {
-  const link = document.createElement('link');
-  link.rel = 'manifest'; link.href = manifestURL;
-  document.head.appendChild(link);
-});
-</script>
-
-<!-- Apple touch icon via SVG data URI -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23080d14'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-size='280' font-family='system-ui,sans-serif' font-weight='900' fill='%233b82f6'%3EN%3C/text%3E%3C/svg%3E"/>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.svg">
+<link rel="icon" href="/icons/icon-192.svg">
 <title>NUTRYX</title>
 
 <style>
@@ -106,6 +82,55 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <div id="root"></div>
+
+<script>
+// PWA install prompt handling and iOS Add to Home Screen hint
+document.addEventListener('DOMContentLoaded', function(){
+  const banner = document.getElementById('install-banner');
+  const installBtn = document.getElementById('install-btn');
+  const dismissBtn = document.getElementById('dismiss-btn');
+  const iosHint = document.getElementById('ios-hint');
+  let deferredPrompt = null;
+
+  const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isInStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!localStorage.getItem('nutryx:install-dismissed')) banner.classList.add('show');
+  });
+
+  installBtn && installBtn.addEventListener('click', async function(){
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if (choice && choice.outcome === 'accepted') {
+      banner.classList.remove('show');
+      localStorage.setItem('nutryx:installed','1');
+    }
+    deferredPrompt = null;
+  });
+
+  dismissBtn && dismissBtn.addEventListener('click', function(){
+    banner.classList.remove('show');
+    localStorage.setItem('nutryx:install-dismissed','1');
+  });
+
+  window.addEventListener('appinstalled', function(){
+    banner.classList.remove('show');
+    localStorage.setItem('nutryx:installed','1');
+  });
+
+  // iOS: show hint if not installed and not in standalone
+  try{
+    if (isIos && !isInStandalone && !localStorage.getItem('nutryx:ios-hint-shown')){
+      iosHint && (iosHint.style.display = 'block');
+      localStorage.setItem('nutryx:ios-hint-shown','1');
+    }
+  }catch(e){/* ignore */}
+});
+</script>
 
 <script type="module" src="/src/main.jsx"></script>
 </body>

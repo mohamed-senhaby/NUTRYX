@@ -1,0 +1,104 @@
+import { store } from './store.js';
+
+let client = null;
+let _subscription = null;
+
+function _getConfig(){
+  const saved = store.get('supabase') || {};
+  const url = import.meta.env.VITE_SUPABASE_URL || saved.url || null;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || saved.key || null;
+  return { url, key };
+}
+
+export async function initSupabase(){
+  if (client) return client;
+  const { url, key } = _getConfig();
+  if (!url || !key) return null;
+  try{
+    const mod = await import('@supabase/supabase-js');
+    const createClient = mod.createClient || (mod.default && mod.default.createClient) || mod.default;
+    client = createClient(url, key);
+    return client;
+  }catch(e){
+    console.warn('supabase init failed', e);
+    return null;
+  }
+}
+
+export function setConfig(url, key){
+  store.set('supabase', { url, key });
+}
+
+export async function signInMagic(email){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  return s.auth.signInWithOtp({ email });
+}
+
+export async function signUpWithPassword(email, password){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  return s.auth.signUp({ email, password });
+}
+
+export async function signInWithPassword(email, password){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  return s.auth.signInWithPassword({ email, password });
+}
+
+export async function signOut(){
+  const s = await initSupabase();
+  if (!s) return;
+  return s.auth.signOut();
+}
+
+export async function getUser(){
+  const s = await initSupabase();
+  if (!s) return null;
+  try{
+    const res = await s.auth.getUser();
+    return res?.data?.user || null;
+  }catch(e){
+    return null;
+  }
+}
+
+export function onAuthStateChange(cb){
+  // returns unsubscribe function
+  (async ()=>{
+    const s = await initSupabase();
+    if (!s) return ()=>{};
+    try{
+      const { data } = s.auth.onAuthStateChange((event, session) => {
+        cb(event, session);
+      });
+      _subscription = data?.subscription || null;
+    }catch(e){/* ignore */}
+  })();
+
+  return ()=>{ try{ if (_subscription && _subscription.unsubscribe) _subscription.unsubscribe(); }catch(e){} };
+}
+
+export async function uploadBackup(payload){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  const user = await getUser();
+  if (!user) throw new Error('Not signed in');
+  // expects a table `nutryx_backups` with columns: id (uuid), user_id (uuid), payload (jsonb), created_at (timestamptz)
+  const { data, error } = await s.from('nutryx_backups').insert([{ user_id: user.id, payload }]);
+  return { data, error };
+}
+
+export async function fetchLatestBackup(){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  const user = await getUser();
+  if (!user) throw new Error('Not signed in');
+  const { data, error } = await s.from('nutryx_backups').select('payload, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  return { data, error };
+}
+
+export default {
+  initSupabase, setConfig, signInMagic, signOut, getUser, onAuthStateChange, uploadBackup, fetchLatestBackup
+};

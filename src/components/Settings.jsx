@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, SectionLabel, T } from '../lib/ui.jsx';
 import LanguageSelector from './LanguageSelector.jsx';
+import BackupCard from './Backup.jsx';
+import CloudSync from './CloudSync.jsx';
 import { L } from '../lib/i18n.js';
 
 export default function Settings(){
@@ -17,6 +19,8 @@ export default function Settings(){
         <SectionLabel>Privacy</SectionLabel>
         <div style={{color:T.textMuted}}>Keys are stored on the server side and never in the client.</div>
       </Card>
+      <BackupCard />
+      <CloudSync />
     </div>
   );
 }
