@@ -80,6 +80,28 @@ export default function App(){
   useEffect(()=>{ store.set('streaks',streaks); },[streaks]);
   useEffect(()=>{ store.set('badges',badges); },[badges]);
 
+  // Migration: if a stored profile is missing `sex` or has an outlier `calGoal`, recalc it
+  useEffect(()=>{
+    if(!profile) return;
+    const hasSex = !!profile.sex;
+    const calNum = Number(profile.calGoal);
+    const calOutlier = !isFinite(calNum) || calNum > 5000 || calNum < 800;
+    if(!hasSex || calOutlier){
+      const w = parseFloat(profile.weight)||75;
+      const h = parseFloat(profile.height)||170;
+      const a = parseFloat(profile.age)||25;
+      const sex = profile.sex||'male';
+      const bmr = Math.round(10*w + 6.25*h - 5*a + (sex === 'male' ? 5 : -161));
+      const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[profile.activity]||1.55;
+      const tdee = Math.round(bmr * mult);
+      const cal = profile.goal==="lose"?tdee-400:profile.goal==="gain"?tdee+300:tdee;
+      const proteinGoal = Math.round(w*(profile.goal==="gain"?2:1.6));
+      const migrated = {...profile, sex, calGoal:cal, proteinGoal};
+      setProfile(migrated);
+      store.set('profile',migrated);
+    }
+  },[profile]);
+
   const today = useMemo(()=>computeTodayFromMeals(meals),[meals]);
 
   const handleAdd = (m)=>{ setMeals(prev=>{ const next=[...prev,m]; store.set('meals',next); return next; }); };

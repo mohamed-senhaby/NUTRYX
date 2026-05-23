@@ -5,17 +5,20 @@ import { L } from '../lib/i18n.js';
 
 export default function Onboarding({onDone}){
   const[step,setStep]=useState(0);
-  const[data,setData]=useState({name:"",age:"",weight:"",height:"",goal:"lose",activity:"moderate",calGoal:2000,proteinGoal:150,waterGoal:8});
+  const[data,setData]=useState({name:"",age:"",weight:"",height:"",goal:"lose",activity:"moderate",sex:"male",calGoal:2000,proteinGoal:150,waterGoal:8});
   const set=(k,v)=>setData(d=>({...d,[k]:v}));
   const goals=[{v:"lose",l:"🔥 Lose Weight"},{v:"maintain",l:"⚖️ Maintain Weight"},{v:"gain",l:"💪 Gain Muscle"}];
   const acts=[{v:"sedentary",l:"🪑 Sedentary"},{v:"light",l:"🚶 Light Active"},{v:"moderate",l:"🏃 Moderate"},{v:"active",l:"⚡ Very Active"}];
   const calc=()=>{
     const w=parseFloat(data.weight)||75,h=parseFloat(data.height)||170,a=parseFloat(data.age)||25;
-    const bmr=10*w+6.25*h-5*a+5;
+    const sex = data.sex || 'male';
+    const bmr = Math.round(10*w + 6.25*h - 5*a + (sex === 'male' ? 5 : -161));
     const mult={sedentary:1.2,light:1.375,moderate:1.55,active:1.725}[data.activity]||1.55;
     const tdee=Math.round(bmr*mult);
     const cal=data.goal==="lose"?tdee-400:data.goal==="gain"?tdee+300:tdee;
-    set("calGoal",cal);set("proteinGoal",Math.round(w*(data.goal==="gain"?2:1.6)));setStep(3);
+    set("calGoal",cal);
+    set("proteinGoal",Math.round(w*(data.goal==="gain"?2:1.6)));
+    setStep(3);
   };
   const finish=()=>{store.set("profile",data);store.set("streaks",{water:0,calories:0,workout:0,lastDate:""});onDone(data);};
   return(
@@ -34,6 +37,14 @@ export default function Onboarding({onDone}){
             <div style={{color:T.textMuted,fontSize:14,marginBottom:20,lineHeight:1.6}}>{L('onboarding_sub')}</div>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               <Input value={data.name} onChange={e=>set("name",e.target.value)} placeholder="Your name"/>
+              <div style={{display:"flex",gap:10,marginTop:6}}>
+                <button onClick={()=>set("sex","male")}
+                  style={{background:data.sex==="male"?T.accent:T.surfaceHigh,color:data.sex==="male"?"#080d14":T.text,
+                    border:`1px solid ${data.sex==="male"?T.accent:T.border}`,borderRadius:14,padding:"10px 14px",fontWeight:700,cursor:"pointer"}}>Male</button>
+                <button onClick={()=>set("sex","female")}
+                  style={{background:data.sex==="female"?T.accent:T.surfaceHigh,color:data.sex==="female"?"#080d14":T.text,
+                    border:`1px solid ${data.sex==="female"?T.accent:T.border}`,borderRadius:14,padding:"10px 14px",fontWeight:700,cursor:"pointer"}}>Female</button>
+              </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
                 <Input value={data.age} onChange={e=>set("age",e.target.value)} placeholder="Age" type="number"/>
                 <Input value={data.weight} onChange={e=>set("weight",e.target.value)} placeholder="kg" type="number"/>
