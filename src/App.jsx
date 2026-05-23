@@ -85,7 +85,7 @@ export default function App(){
     if(!profile) return;
     const hasSex = !!profile.sex;
     const calNum = Number(profile.calGoal);
-    const calOutlier = !isFinite(calNum) || calNum > 5000 || calNum < 800;
+    const calOutlier = !isFinite(calNum) || calNum > 4000 || calNum < 800;
     if(!hasSex || calOutlier){
       const w = parseFloat(profile.weight)||75;
       const h = parseFloat(profile.height)||170;
