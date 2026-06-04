@@ -8,6 +8,7 @@ import { uploadBackup, fetchLatestBackup, initSupabase, getUser, onAuthStateChan
 import FeatureTour from './components/FeatureTour.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
+import { SharedRecipePreview } from './components/RecipeManager.jsx';
 import HomeSection from './components/HomeSection.jsx';
 import NutritionSection from './components/NutritionSection.jsx';
 import WorkoutSection from './components/WorkoutSection.jsx';
@@ -28,6 +29,10 @@ function computeToday(meals, water){
 export default function App(){
   const[authUser,setAuthUser]=useState(null);
   const[authChecked,setAuthChecked]=useState(false);
+  const[sharedRecipeId,setSharedRecipeId]=useState(()=>{
+    const p=new URLSearchParams(window.location.search);
+    return p.get('recipe')||null;
+  });
 
   // Check Supabase session on startup
   useEffect(()=>{
@@ -282,6 +287,7 @@ export default function App(){
 
   return(
     <div id="app-shell" dir={isRTL()?'rtl':'ltr'} style={{background:T.bg,minHeight:'100dvh',display:'flex',flexDirection:'column'}}>
+      {sharedRecipeId&&<SharedRecipePreview recipeId={sharedRecipeId} onClose={()=>{setSharedRecipeId(null);window.history.replaceState({},'',window.location.pathname);}}/>}
       {showTour&&<FeatureTour onDone={()=>{setShowTour(false);store.set('seenTour',true);}}/>}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:`calc(12px + env(safe-area-inset-top)) 16px 12px`,background:T.surface,borderBottom:`1px solid ${T.border}`}}>
         <div style={{fontWeight:900,color:T.accent,fontSize:18}}>NUTRYX</div>

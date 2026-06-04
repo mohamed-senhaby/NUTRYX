@@ -359,6 +359,21 @@ function HealthImportCard(){
 
 const SUPABASE_SQL = `-- Run this once in your Supabase SQL Editor
 
+create table if not exists nutryx_recipes (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  created_by_name text,
+  name text not null,
+  ingredients jsonb not null default '[]',
+  per100g jsonb not null default '{}',
+  total_weight int default 0,
+  is_public boolean default true,
+  created_at timestamptz default now()
+);
+alter table nutryx_recipes enable row level security;
+create policy "read public recipes" on nutryx_recipes for select using (is_public = true or auth.uid() = user_id);
+create policy "own recipes" on nutryx_recipes for all using (auth.uid() = user_id);
+
 create table if not exists nutryx_backups (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users not null,

@@ -99,6 +99,44 @@ export async function fetchLatestBackup(){
   return { data, error };
 }
 
+export async function saveRecipe(recipe){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  const user = await getUser();
+  if (!user) throw new Error('Not signed in');
+  const row = {
+    user_id: user.id,
+    created_by_name: user.email?.split('@')[0] || 'User',
+    name: recipe.name,
+    ingredients: recipe.ingredients,
+    per100g: recipe.per100g,
+    total_weight: recipe.totalWeight || 0,
+    is_public: true,
+  };
+  if (recipe.supabaseId) {
+    const { data, error } = await s.from('nutryx_recipes').update(row).eq('id', recipe.supabaseId).eq('user_id', user.id).select().maybeSingle();
+    return { data, error };
+  }
+  const { data, error } = await s.from('nutryx_recipes').insert([row]).select().maybeSingle();
+  return { data, error };
+}
+
+export async function fetchRecipeById(id){
+  const s = await initSupabase();
+  if (!s) throw new Error('Supabase not configured');
+  const { data, error } = await s.from('nutryx_recipes').select('*').eq('id', id).maybeSingle();
+  return { data, error };
+}
+
+export async function deleteSharedRecipe(supabaseId){
+  const s = await initSupabase();
+  if (!s) return;
+  const user = await getUser();
+  if (!user) return;
+  await s.from('nutryx_recipes').delete().eq('id', supabaseId).eq('user_id', user.id);
+}
+
 export default {
-  initSupabase, setConfig, signInMagic, signOut, getUser, onAuthStateChange, uploadBackup, fetchLatestBackup
+  initSupabase, setConfig, signInMagic, signOut, getUser, onAuthStateChange,
+  uploadBackup, fetchLatestBackup, saveRecipe, fetchRecipeById, deleteSharedRecipe
 };

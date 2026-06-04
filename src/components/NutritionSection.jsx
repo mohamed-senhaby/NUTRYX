@@ -6,7 +6,7 @@ import BarcodeScanner from './BarcodeScanner.jsx';
 import PhotoScanner from './PhotoScanner.jsx';
 import ProductCard from './ProductCard.jsx';
 import FoodSearch from './FoodSearch.jsx';
-import RecipeBuilder from './RecipeBuilder.jsx';
+import RecipeManager from './RecipeManager.jsx';
 import MealPlanner from './MealPlanner.jsx';
 import { Card, Tag, Btn, OutlineBtn, Input, Ring, Hint, SectionLabel, T } from '../lib/ui.jsx';
 
@@ -276,7 +276,7 @@ export default function NutritionSection({meals,allMeals=[],onAdd,onEdit,onDelet
             </div>
           </Card>
 
-          {mode==='recipe'&&<RecipeBuilder onAdd={addMeal}/>}
+          {mode==='recipe'&&<RecipeManager onAdd={addMeal}/>}
 
           {mode!=='recipe'&&<Card>
             <div style={{display:'flex',gap:6,overflowX:'auto',marginBottom:14}}>
