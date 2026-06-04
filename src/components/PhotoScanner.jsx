@@ -69,13 +69,12 @@ export default function PhotoScanner({onResult,onClose}){
     <div style={{position:"fixed",inset:0,background:"#000",zIndex:200,display:"flex",flexDirection:"column",
       paddingTop:"env(safe-area-inset-top)"}}>
 
-      {/* Header */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",background:"rgba(0,0,0,0.8)"}}>
+      {/* Safe area top spacer */}
+      <div style={{height:"env(safe-area-inset-top)",background:"#000",flexShrink:0}}/>
+
+      {/* Title */}
+      <div style={{padding:"12px 20px",background:"rgba(0,0,0,0.8)",flexShrink:0}}>
         <span style={{fontWeight:800,fontSize:17,color:T.cyan}}>📸 Photo Scan</span>
-        <button onClick={close}
-          style={{background:T.red,border:"none",color:"#fff",borderRadius:10,padding:"10px 20px",fontWeight:800,cursor:"pointer",fontSize:15,minWidth:80,minHeight:44}}>
-          ✕ Close
-        </button>
       </div>
 
       {/* Choose mode */}
@@ -88,6 +87,11 @@ export default function PhotoScanner({onResult,onClose}){
           <OutlineBtn onClick={()=>fileRef.current?.click()} style={{width:"100%",padding:"14px"}}>🖼️ Upload from Gallery</OutlineBtn>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{display:"none"}}/>
           {err&&<div style={{color:T.red,fontSize:13,textAlign:"center",padding:10}}>{err}</div>}
+          <button onClick={close}
+            style={{width:"100%",background:T.red,border:"none",color:"#fff",borderRadius:12,
+              padding:"14px",fontWeight:800,cursor:"pointer",fontSize:16,marginTop:8}}>
+            ✕ Close
+          </button>
         </div>
       )}
 
@@ -104,6 +108,7 @@ export default function PhotoScanner({onResult,onClose}){
           </div>
           <Btn onClick={capture} color={T.cyan} style={{width:"100%",padding:"14px"}}>📸 Capture</Btn>
           <OutlineBtn onClick={()=>{stop();setMode("choose");}} style={{width:"100%"}}>← Back</OutlineBtn>
+          <button onClick={close} style={{width:"100%",background:T.red,border:"none",color:"#fff",borderRadius:12,padding:"14px",fontWeight:800,cursor:"pointer",fontSize:16}}>✕ Close</button>
         </div>
       )}
 

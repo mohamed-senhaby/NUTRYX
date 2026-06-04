@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { store } from './lib/store.js';
 import { L, translateStatic, isRTL } from './lib/i18n.js';
 import { T } from './lib/ui.jsx';
@@ -127,29 +127,38 @@ export default function App(){
 
   useEffect(()=>{store.set('meals',meals);(async()=>{try{await db.saveMeals(meals);}catch(e){}})();},[meals]);
 
-  // Auto-sync on meals changes
-  useEffect(()=>{
-    if(!store.get('supabase:autoSync'))return;
-    const t=setTimeout(async()=>{try{await uploadBackup(await db.exportJSON());}catch(e){}},1000);
-    return()=>clearTimeout(t);
-  },[meals]);
+  // Auto-sync — always on when signed in
+  const doSync=useCallback(async()=>{
+    if(!authUser)return;
+    try{await uploadBackup(await db.exportJSON());}catch(e){}
+  },[authUser]);
 
-  // Auto-sync on other data changes (water, workouts, weights, moods)
+  // Sync immediately on sign-in
+  useEffect(()=>{ if(authUser) doSync(); },[authUser]);
+
+  // Sync on meals change (debounced 1s)
   useEffect(()=>{
-    if(!store.get('supabase:autoSync'))return;
+    if(!authUser)return;
+    const t=setTimeout(doSync,1000);
+    return()=>clearTimeout(t);
+  },[meals,authUser]);
+
+  // Sync on any other data change (water, workouts, weights, moods)
+  useEffect(()=>{
+    if(!authUser)return;
     let t=null;
-    const fn=()=>{
-      if(t)clearTimeout(t);
-      t=setTimeout(async()=>{try{await uploadBackup(await db.exportJSON());}catch(e){}},1500);
-    };
+    const fn=()=>{ if(t)clearTimeout(t); t=setTimeout(doSync,1500); };
     window.addEventListener('nutryx:data-changed',fn);
     window.addEventListener('nutryx:workout-logged',fn);
-    return()=>{
-      window.removeEventListener('nutryx:data-changed',fn);
-      window.removeEventListener('nutryx:workout-logged',fn);
-      if(t)clearTimeout(t);
-    };
-  },[]);
+    return()=>{ window.removeEventListener('nutryx:data-changed',fn); window.removeEventListener('nutryx:workout-logged',fn); if(t)clearTimeout(t); };
+  },[authUser,doSync]);
+
+  // Sync every 5 minutes in background
+  useEffect(()=>{
+    if(!authUser)return;
+    const t=setInterval(doSync,5*60*1000);
+    return()=>clearInterval(t);
+  },[authUser,doSync]);
 
   useEffect(()=>{store.set('profile',profile);},[profile]);
   useEffect(()=>{store.set('streaks',streaks);},[streaks]);

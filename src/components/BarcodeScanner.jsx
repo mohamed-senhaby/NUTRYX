@@ -68,16 +68,14 @@ export default function BarcodeScanner({onResult,onClose}){
   },[status,onResult,stop]);
 
   return(
-    <div style={{position:"fixed",inset:0,background:"#000",zIndex:200,display:"flex",flexDirection:"column",
-      paddingTop:"env(safe-area-inset-top)"}}>
+    <div style={{position:"fixed",inset:0,background:"#000",zIndex:200,display:"flex",flexDirection:"column"}}>
 
-      {/* Header */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",background:"rgba(0,0,0,0.8)"}}>
+      {/* Safe area top spacer */}
+      <div style={{height:"env(safe-area-inset-top)",background:"#000",flexShrink:0}}/>
+
+      {/* Title */}
+      <div style={{padding:"12px 20px",background:"rgba(0,0,0,0.8)",flexShrink:0}}>
         <span style={{fontWeight:800,fontSize:17,color:T.accent}}>📷 Scan Barcode</span>
-        <button onClick={close}
-          style={{background:T.red,border:"none",color:"#fff",borderRadius:10,padding:"10px 20px",fontWeight:800,cursor:"pointer",fontSize:15,minWidth:80,minHeight:44}}>
-          ✕ Close
-        </button>
       </div>
 
       {/* Camera area */}
@@ -110,15 +108,21 @@ export default function BarcodeScanner({onResult,onClose}){
         </div>
       )}
 
-      {/* Manual entry */}
-      <div style={{padding:"16px 20px",paddingBottom:"calc(16px + env(safe-area-inset-bottom))",background:"rgba(0,0,0,0.9)"}}>
-        <div style={{fontSize:12,color:"#888",fontWeight:700,letterSpacing:1,marginBottom:10}}>ENTER BARCODE MANUALLY</div>
-        <div style={{display:"flex",gap:10}}>
+      {/* Manual entry + close */}
+      <div style={{padding:"14px 20px",background:"rgba(0,0,0,0.9)",flexShrink:0}}>
+        <div style={{fontSize:12,color:"#888",fontWeight:700,letterSpacing:1,marginBottom:8}}>ENTER BARCODE MANUALLY</div>
+        <div style={{display:"flex",gap:10,marginBottom:12}}>
           <Input value={manual} onChange={e=>setManual(e.target.value)}
             onKeyDown={e=>e.key==="Enter"&&manual.trim()&&(stop(),onResult(manual.trim()))}
             placeholder="e.g. 8410076901033" type="number"/>
           <Btn onClick={()=>manual.trim()&&(stop(),onResult(manual.trim()))} style={{flexShrink:0}}>Look Up</Btn>
         </div>
+        <button onClick={close}
+          style={{width:"100%",background:T.red,border:"none",color:"#fff",borderRadius:12,
+            padding:"14px",fontWeight:800,cursor:"pointer",fontSize:16,
+            marginBottom:"env(safe-area-inset-bottom)"}}>
+          ✕ Close
+        </button>
       </div>
     </div>
   );
