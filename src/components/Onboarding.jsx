@@ -18,6 +18,7 @@ export default function Onboarding({onDone}){
     const cal=data.goal==="lose"?tdee-400:data.goal==="gain"?tdee+300:tdee;
     set("calGoal",cal);
     set("proteinGoal",Math.round(w*(data.goal==="gain"?2:1.6)));
+    set("waterGoal",Math.max(6,Math.round(w*35/250)));
     setStep(3);
   };
   const finish=()=>{store.set("profile",data);store.set("streaks",{water:0,calories:0,workout:0,lastDate:""});onDone(data);};
