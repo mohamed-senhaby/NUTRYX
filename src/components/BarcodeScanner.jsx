@@ -4,7 +4,7 @@ import { Input, Btn, T } from '../lib/ui.jsx';
 
 export default function BarcodeScanner({onResult,onClose}){
   const videoRef=useRef(null),streamRef=useRef(null),intervalRef=useRef(null),canvasRef=useRef(document.createElement("canvas"));
-  const[status,setStatus]=useState("starting"),[manual,setManual]=useState(""),[hint,setHint]=useState("Point camera at barcode");
+  const[status,setStatus]=useState("starting"),[errMsg,setErrMsg]=useState(""),[manual,setManual]=useState(""),[hint,setHint]=useState("Point camera at barcode");
 
   const stop=useCallback(()=>{
     try{ clearInterval(intervalRef.current); }catch{}
@@ -16,13 +16,29 @@ export default function BarcodeScanner({onResult,onClose}){
   useEffect(()=>{
     let ok=true;
     const startCam=async()=>{
+      if(!navigator?.mediaDevices?.getUserMedia){
+        setErrMsg("Camera API not available in this browser.");
+        setStatus("no-camera"); return;
+      }
       try{
-        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:"environment"}}})
-          .catch(()=>navigator.mediaDevices.getUserMedia({video:true}));
+        // Use "ideal" not "exact" — works on iOS Safari without throwing
+        const s=await navigator.mediaDevices.getUserMedia({
+          video:{ facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:720} }
+        });
         if(!ok){try{s.getTracks().forEach(t=>t.stop());}catch{}return;}
         streamRef.current=s;
-        if(videoRef.current){videoRef.current.srcObject=s;await videoRef.current.play();setStatus("scanning");}
-      }catch(e){setStatus("no-camera");}
+        if(videoRef.current){
+          videoRef.current.srcObject=s;
+          await videoRef.current.play();
+          setStatus("scanning");
+        }
+      }catch(e){
+        const msg=e?.name==="NotAllowedError"?"Camera permission denied. Allow camera in browser settings."
+          :e?.name==="NotFoundError"?"No camera found on this device."
+          :`Camera error: ${e?.message||e?.name||"unknown"}`;
+        setErrMsg(msg);
+        setStatus("no-camera");
+      }
     };
     startCam();
     return()=>{ok=false;stop();};
@@ -83,12 +99,12 @@ export default function BarcodeScanner({onResult,onClose}){
 
       {/* No camera state */}
       {status==="no-camera"&&(
-        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:24,textAlign:"center"}}>
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,padding:24,textAlign:"center"}}>
           <div style={{fontSize:56}}>📵</div>
           <div style={{color:"#fff",fontSize:16,fontWeight:700}}>Camera unavailable</div>
-          <div style={{color:"#888",fontSize:14}}>Enter the barcode number manually below</div>
-          <button onClick={close}
-            style={{background:T.red,border:"none",color:"#fff",borderRadius:12,padding:"14px 40px",fontWeight:800,cursor:"pointer",fontSize:16,marginTop:8}}>
+          <div style={{color:"#f87171",fontSize:13,maxWidth:280}}>{errMsg||"Camera could not be started."}</div>
+          <div style={{color:"#888",fontSize:13}}>Enter the barcode number manually below instead.</div>
+          <button onClick={close} style={{background:T.red,border:"none",color:"#fff",borderRadius:12,padding:"14px 40px",fontWeight:800,cursor:"pointer",fontSize:16,marginTop:4}}>
             Close
           </button>
         </div>

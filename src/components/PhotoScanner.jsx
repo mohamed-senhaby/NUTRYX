@@ -14,12 +14,21 @@ export default function PhotoScanner({onResult,onClose}){
 
   const startCam=async()=>{
     setMode("camera");
+    if(!navigator?.mediaDevices?.getUserMedia){
+      setErr("Camera not available. Upload a photo instead.");
+      setMode("choose"); return;
+    }
     try{
-      const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      const s=await navigator.mediaDevices.getUserMedia({
+        video:{ facingMode:{ideal:"environment"} }
+      });
       streamRef.current=s;
       if(videoRef.current){videoRef.current.srcObject=s;videoRef.current.play();}
-    }catch{
-      setErr("Camera unavailable. Upload a photo instead.");
+    }catch(e){
+      const msg=e?.name==="NotAllowedError"?"Camera permission denied — allow it in browser settings."
+        :e?.name==="NotFoundError"?"No camera found on this device."
+        :"Camera unavailable. Upload a photo instead.";
+      setErr(msg);
       setMode("choose");
     }
   };
